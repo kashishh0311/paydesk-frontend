@@ -242,21 +242,21 @@ export const DepartmentBarChart: React.FC<{ data: DeptBreakdownItem[] }> = ({ da
               key={dept.dept}
               className="p-1.5 rounded-lg hover:bg-background/80 transition-colors duration-150 border border-transparent hover:border-border/60"
             >
-              <div className="flex items-center justify-between text-xs mb-1 gap-2">
-                <div className="flex items-center gap-2">
+              <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between text-xs mb-1.5 gap-1 sm:gap-2">
+                <div className="flex items-center gap-1.5 flex-wrap">
                   <span className="w-4 h-4 rounded bg-background border border-border flex items-center justify-center font-bold text-[9px] text-muted font-mono shrink-0">
                     {idx + 1}
                   </span>
                   <span className="font-semibold text-foreground text-xs">{dept.dept}</span>
-                  <span className="text-muted text-[11px]">
+                  <span className="text-muted text-[11px] whitespace-nowrap">
                     ({dept.employees.toLocaleString()} staff • {dept.pct}%)
                   </span>
                 </div>
-                <div className="flex items-center gap-2 shrink-0">
-                  <span className="text-muted text-[11px]">
+                <div className="flex items-center justify-between sm:justify-end gap-2 shrink-0 flex-wrap">
+                  <span className="text-muted text-[11px] whitespace-nowrap">
                     Avg: <strong className="text-foreground">{dept.avg}</strong>
                   </span>
-                  <span className="font-semibold text-foreground font-mono text-xs">
+                  <span className="font-semibold text-foreground font-mono text-xs whitespace-nowrap">
                     {formatINR(dept.totalSpend)}
                   </span>
                 </div>
@@ -308,17 +308,17 @@ export const CurrencyDistributionChart: React.FC<{ data: CountryBreakdownItem[] 
               key={hub.currency}
               className="p-1.5 rounded-lg hover:bg-background/80 transition-colors duration-150 border border-transparent hover:border-border/60"
             >
-              <div className="flex items-center justify-between text-xs mb-1 gap-2">
-                <div className="flex items-center gap-2">
-                  <span className="px-1.5 py-0.2 rounded bg-background border border-border font-mono font-bold text-[10px] text-primary shrink-0">
+              <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between text-xs mb-1.5 gap-1 sm:gap-2">
+                <div className="flex items-center gap-1.5 flex-wrap">
+                  <span className="px-1.5 py-0.5 rounded bg-background border border-border font-mono font-bold text-[10px] text-primary shrink-0">
                     {hub.currency}
                   </span>
                   <span className="font-semibold text-foreground text-xs">{hub.country}</span>
-                  <span className="text-muted text-[11px]">
+                  <span className="text-muted text-[11px] whitespace-nowrap">
                     ({hub.employees.toLocaleString()} staff • {pct}%)
                   </span>
                 </div>
-                <span className="font-mono font-semibold text-foreground text-xs shrink-0">
+                <span className="font-mono font-semibold text-foreground text-xs self-end sm:self-auto shrink-0 whitespace-nowrap">
                   {hub.spend}
                 </span>
               </div>

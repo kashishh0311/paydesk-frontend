@@ -241,9 +241,9 @@ export const Dashboard: React.FC = () => {
           subtitle="Live compliance audit tracking from database"
           className="h-full flex flex-col"
         >
-          <div className="flex-1 overflow-x-auto overflow-y-auto custom-scrollbar">
+          <div className="max-h-[300px] overflow-y-auto overflow-x-auto custom-scrollbar">
             <table className="w-full text-left text-sm">
-              <thead className="bg-background text-muted border-b border-border uppercase tracking-wider text-xs">
+              <thead className="bg-background text-muted border-b border-border uppercase tracking-wider text-xs sticky top-0 z-10">
                 <tr>
                   <th className="py-2.5 px-3">Employee</th>
                   <th className="py-2.5 px-3">Action</th>
@@ -259,7 +259,7 @@ export const Dashboard: React.FC = () => {
                     </td>
                   </tr>
                 ) : (
-                  recentAudits.slice(0, 5).map((row) => (
+                  recentAudits.map((row) => (
                     <tr key={row.id} className="hover:bg-background/60 transition">
                       <td className="py-2.5 px-3 font-mono text-xs font-semibold text-primary">{row.employee_code}</td>
                       <td className="py-2.5 px-3 text-xs font-medium">{row.action}</td>

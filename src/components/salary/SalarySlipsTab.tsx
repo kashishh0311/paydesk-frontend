@@ -390,7 +390,7 @@ export const SalarySlipsTab: React.FC = () => {
                 </span>
               }
             >
-              <div className="space-y-3">
+              <div className="space-y-3 max-h-[360px] overflow-y-auto pr-1.5 custom-scrollbar">
                 {historyData.payrollHistory.map((run) => (
                   <div
                     key={run.id}
@@ -461,7 +461,7 @@ export const SalarySlipsTab: React.FC = () => {
                 </span>
               }
             >
-              <div className="relative pl-6 space-y-4 before:absolute before:left-2 before:top-2 before:bottom-2 before:w-0.5 before:bg-border">
+              <div className="relative pl-6 space-y-4 max-h-[360px] overflow-y-auto pr-1.5 custom-scrollbar before:absolute before:left-2 before:top-2 before:bottom-2 before:w-0.5 before:bg-border">
                 {historyData.salaryHistory.map((s) => {
                   const base = Number(s.base_salary) || 0;
                   const monthlyTotal = Math.round(base / 12);

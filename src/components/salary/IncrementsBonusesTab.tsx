@@ -774,7 +774,7 @@ export const IncrementsBonusesTab: React.FC = () => {
             title="Recent Increment & Bonus Audit Trail"
             subtitle="Verified compensation adjustments logged to compliance database"
           >
-            <div className="overflow-x-auto max-h-[500px] overflow-y-auto custom-scrollbar">
+            <div className="overflow-x-auto max-h-[400px] overflow-y-auto custom-scrollbar">
               <table className="w-full text-left text-xs">
                 <thead className="bg-background text-muted uppercase border-b border-border sticky top-0 z-10">
                   <tr>
