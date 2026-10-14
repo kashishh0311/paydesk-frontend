@@ -221,9 +221,9 @@ export const DashboardLayout: React.FC = () => {
       </aside>
 
       {/* Main Container */}
-      <div className="flex-1 min-w-0 max-w-full lg:pl-64 flex flex-col min-h-screen overflow-x-hidden">
+      <div className="flex-1 min-w-0 max-w-full lg:pl-64 flex flex-col min-h-screen pt-16 overflow-x-hidden">
         {/* Sticky Header */}
-        <header className="sticky top-0 z-30 h-16 bg-card/90 backdrop-blur-md border-b border-border px-4 lg:px-[30px] flex items-center justify-between transition-colors">
+        <header className="fixed top-0 right-0 left-0 lg:left-64 z-30 h-16 bg-card/90 backdrop-blur-md border-b border-border px-4 lg:px-[30px] flex items-center justify-between transition-colors">
           <div className="flex items-center gap-3">
             <button
               onClick={() => setIsMobileOpen(true)}
