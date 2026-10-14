@@ -14,7 +14,7 @@ const localeMap: Record<string, string> = {
   SGD: 'en-SG',
 };
 
-const symbolMap: Record<string, string> = {
+export const symbolMap: Record<string, string> = {
   INR: '₹',
   USD: '$',
   GBP: '£',
@@ -67,9 +67,6 @@ export function formatCurrency(
   }
 }
 
-/**
- * Backward-compatible helper for INR formatting
- */
 export function formatINR(
   val: number | string | null | undefined,
   options: { decimals?: boolean; compact?: boolean } = {}

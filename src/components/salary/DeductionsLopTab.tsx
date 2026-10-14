@@ -91,11 +91,15 @@ export const DeductionsLopTab: React.FC = () => {
     { label: 'EPF / Provident Fund (12%)', value: 'EPF' },
     { label: 'Professional Tax (₹200/mo)', value: 'Professional Tax' },
     { label: 'Health & Medical Premium (₹120/mo)', value: 'Health' },
-    { label: 'Loss of Pay (LOP)', value: 'LOP' }
+    { label: 'Loss of Pay (LOP)', value: 'LOP' },
+    { label: 'Loan & Custom Deductions', value: 'custom' }
   ];
 
   const getTypeBadge = (type: string) => {
     const t = (type || '').toLowerCase();
+    if (t.includes('loan') || t.includes('advance') || t.includes('custom') || t.includes('penalty')) {
+      return 'bg-purple-500/10 text-purple-600 dark:text-purple-400 border-purple-500/20';
+    }
     if (t.includes('loss of pay') || t.includes('lop') || t.includes('leave')) {
       return 'bg-amber-500/10 text-amber-600 dark:text-amber-400 border-amber-500/20';
     }

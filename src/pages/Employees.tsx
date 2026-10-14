@@ -23,7 +23,7 @@ import {
 import { downloadExport } from '../utils/download';
 import { useDebounce } from '../hooks/useDebounce';
 import { useOnClickOutside } from '../hooks/useOnClickOutside';
-import { formatINR } from '../utils/currency';
+import { formatCurrency } from '../utils/currency';
 
 interface EmployeeItem {
   id: number;
@@ -584,7 +584,7 @@ export const Employees: React.FC = () => {
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 backdrop-blur-xs p-4">
           <div
             ref={viewModalRef}
-            className="w-full max-w-2xl bg-card border border-border rounded-2xl p-6 shadow-2xl space-y-4 max-h-[90vh] overflow-y-auto animate-in fade-in zoom-in-95 duration-150"
+            className="w-full max-w-2xl bg-card border border-border rounded-2xl p-6 shadow-2xl space-y-4 max-h-[90vh] overflow-y-auto custom-scrollbar animate-in fade-in zoom-in-95 duration-150"
           >
             <div className="flex items-center justify-between border-b border-border pb-3">
               <div className="flex items-center gap-2">
@@ -614,12 +614,14 @@ export const Employees: React.FC = () => {
                 <strong className="text-foreground">{viewEmployee.first_name} {viewEmployee.last_name}</strong>
               </div>
               <div>
-                <span className="text-muted block text-[11px]">Department</span>
+                <span className="text-muted block text-[11px]">Department & Role</span>
                 <strong className="text-foreground">{viewEmployee.department}</strong>
+                <span className="text-[11px] text-muted block truncate">{viewEmployee.job_title}</span>
               </div>
               <div>
-                <span className="text-muted block text-[11px]">Designation</span>
-                <strong className="text-foreground">{viewEmployee.job_title}</strong>
+                <span className="text-muted block text-[11px]">Country & Currency</span>
+                <strong className="text-foreground">{viewEmployee.country || 'International'}</strong>
+                <span className="font-mono font-bold text-primary block">{viewEmployee.currency || 'USD'}</span>
               </div>
             </div>
 
@@ -632,6 +634,8 @@ export const Employees: React.FC = () => {
               <div className="space-y-4">
                 {(() => {
                   const activeSalary = viewEmpHistory.salaryHistory?.[0] || {};
+                  const curr = viewEmployee.currency || 'USD';
+                  const country = viewEmployee.country || 'United States';
                   const base = Number(activeSalary.base_salary) || 600000;
                   const bonus = Number(activeSalary.bonuses) || 0;
                   const statutoryDeductions = Number(activeSalary.deductions) > 0 ? Number(activeSalary.deductions) : Math.round(base * 0.12);
@@ -649,9 +653,9 @@ export const Employees: React.FC = () => {
                         <div className="p-3 rounded-xl bg-card border border-border">
                           <span className="text-[11px] font-semibold text-muted block">Annual Base</span>
                           <strong className="text-foreground font-mono text-base block mt-0.5">
-                            {formatINR(base)}
+                            {formatCurrency(base, curr, country)}
                           </strong>
-                          <span className="text-[10px] text-muted">₹{Math.round(base / 12).toLocaleString()}/mo</span>
+                          <span className="text-[10px] text-muted font-mono">{formatCurrency(monthlyBase, curr, country)}/mo</span>
                         </div>
 
                         <div className="p-3 rounded-xl bg-emerald-500/10 border border-emerald-500/20">
@@ -659,7 +663,7 @@ export const Employees: React.FC = () => {
                             Active Bonus
                           </span>
                           <strong className="text-emerald-600 dark:text-emerald-400 font-mono text-base block mt-0.5">
-                            +{formatINR(bonus)}
+                            +{formatCurrency(bonus, curr, country)}
                           </strong>
                           <span className="text-[10px] text-emerald-600/80 dark:text-emerald-400/80">
                             {bonus > 0 ? 'Performance Incentive' : 'None assigned'}
@@ -671,7 +675,7 @@ export const Employees: React.FC = () => {
                             Statutory Deductions
                           </span>
                           <strong className="text-rose-500 font-mono text-base block mt-0.5">
-                            -{formatINR(statutoryDeductions)}
+                            -{formatCurrency(statutoryDeductions, curr, country)}
                           </strong>
                           <span className="text-[10px] text-rose-500/80">EPF, Tax & Health</span>
                         </div>
@@ -681,9 +685,9 @@ export const Employees: React.FC = () => {
                             Net Annual Salary
                           </span>
                           <strong className="text-primary font-mono text-base block mt-0.5">
-                            {formatINR(net)}
+                            {formatCurrency(net, curr, country)}
                           </strong>
-                          <span className="text-[10px] text-primary/80">₹{monthlyNet.toLocaleString()}/mo net</span>
+                          <span className="text-[10px] text-primary/80 font-mono">{formatCurrency(monthlyNet, curr, country)}/mo net</span>
                         </div>
                       </div>
 
@@ -694,7 +698,7 @@ export const Employees: React.FC = () => {
                             Verified Salary Structure Deductions
                           </span>
                           <span className="text-[11px] font-mono text-muted">
-                            Total: -{formatINR(statutoryDeductions)}/yr
+                            Total: -{formatCurrency(statutoryDeductions, curr, country)}/yr
                           </span>
                         </div>
 
@@ -702,25 +706,25 @@ export const Employees: React.FC = () => {
                           <div className="p-2.5 rounded-lg bg-card border border-border/80">
                             <span className="text-muted text-[10px] block">Employee Provident Fund (12%)</span>
                             <strong className="text-foreground font-mono text-xs block mt-0.5">
-                              {formatINR(monthlyEPF)}/mo
+                              {formatCurrency(monthlyEPF, curr, country)}/mo
                             </strong>
-                            <span className="text-[10px] text-muted">{formatINR(monthlyEPF * 12)}/yr</span>
+                            <span className="text-[10px] text-muted font-mono">{formatCurrency(monthlyEPF * 12, curr, country)}/yr</span>
                           </div>
 
                           <div className="p-2.5 rounded-lg bg-card border border-border/80">
                             <span className="text-muted text-[10px] block">Professional Tax</span>
                             <strong className="text-foreground font-mono text-xs block mt-0.5">
-                              {formatINR(monthlyPT)}/mo
+                              {formatCurrency(monthlyPT, curr, country)}/mo
                             </strong>
-                            <span className="text-[10px] text-muted">{formatINR(monthlyPT * 12)}/yr</span>
+                            <span className="text-[10px] text-muted font-mono">{formatCurrency(monthlyPT * 12, curr, country)}/yr</span>
                           </div>
 
                           <div className="p-2.5 rounded-lg bg-card border border-border/80">
                             <span className="text-muted text-[10px] block">Health & Medical Premium</span>
                             <strong className="text-foreground font-mono text-xs block mt-0.5">
-                              {formatINR(monthlyHealth)}/mo
+                              {formatCurrency(monthlyHealth, curr, country)}/mo
                             </strong>
-                            <span className="text-[10px] text-muted">{formatINR(monthlyHealth * 12)}/yr</span>
+                            <span className="text-[10px] text-muted font-mono">{formatCurrency(monthlyHealth * 12, curr, country)}/yr</span>
                           </div>
                         </div>
 

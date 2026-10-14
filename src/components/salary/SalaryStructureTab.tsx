@@ -43,6 +43,8 @@ interface SalaryStructureData {
     professional_tax: number;
     health_insurance: number;
     lop?: number;
+    other_deductions?: number;
+    custom_deductions?: Array<{ type: string; amount: number; reason?: string }>;
     total_deductions: number;
     net_monthly: number;
   };
@@ -159,7 +161,8 @@ export const SalaryStructureTab: React.FC = () => {
           bonuses: bonusInput,
           deductions,
           reason: reasonInput,
-          effective_date: effectiveDate
+          effective_date: effectiveDate,
+          is_structure_edit: true
         })
       });
 
@@ -174,12 +177,13 @@ export const SalaryStructureTab: React.FC = () => {
     }
   };
 
-  // Live component simulations for the edit form
   const simulatedMonthlyBase = Math.round(annualBase / 12);
-  const simulatedHra = Math.round(simulatedMonthlyBase * 0.40);
-  const simulatedSpecialAllowance = Math.round(simulatedMonthlyBase * 0.20);
-  const simulatedGrossMonthly = simulatedMonthlyBase + simulatedHra + simulatedSpecialAllowance + Math.round((bonusInput || 0) / 12);
-  const simulatedEpf = Math.round(simulatedMonthlyBase * 0.12);
+  const simulatedBasicSalary = Math.round(simulatedMonthlyBase * 0.50);
+  const simulatedHra = Math.round(simulatedBasicSalary * 0.40);
+  const simulatedSpecialAllowance = simulatedMonthlyBase - simulatedBasicSalary - simulatedHra;
+  const simulatedAllowances = simulatedHra + simulatedSpecialAllowance;
+  const simulatedGrossMonthly = simulatedMonthlyBase + Math.round((bonusInput || 0) / 12);
+  const simulatedEpf = Math.round(simulatedBasicSalary * 0.12);
   const simulatedPT = 200;
   const simulatedHealth = 120;
   const simulatedTotalDeductions = simulatedEpf + simulatedPT + simulatedHealth;
@@ -381,16 +385,16 @@ export const SalaryStructureTab: React.FC = () => {
                   </h4>
                   <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 text-xs">
                     <div className="p-2.5 rounded-lg bg-card border border-border/70">
-                      <span className="text-muted block text-[11px]">Monthly Basic Pay</span>
+                      <span className="text-muted block text-[11px]">Monthly Base Salary</span>
                       <strong className="text-foreground font-mono text-sm">{formatINR(simulatedMonthlyBase)}</strong>
                     </div>
                     <div className="p-2.5 rounded-lg bg-card border border-border/70">
-                      <span className="text-muted block text-[11px]">HRA Allowance (40%)</span>
-                      <strong className="text-foreground font-mono text-sm">{formatINR(simulatedHra)}</strong>
+                      <span className="text-muted block text-[11px]">Basic Pay (50%)</span>
+                      <strong className="text-foreground font-mono text-sm">{formatINR(simulatedBasicSalary)}</strong>
                     </div>
                     <div className="p-2.5 rounded-lg bg-card border border-border/70">
-                      <span className="text-muted block text-[11px]">Special Allowances (20%)</span>
-                      <strong className="text-foreground font-mono text-sm">{formatINR(simulatedSpecialAllowance)}</strong>
+                      <span className="text-muted block text-[11px]">HRA + Special (50%)</span>
+                      <strong className="text-foreground font-mono text-sm">{formatINR(simulatedAllowances)}</strong>
                     </div>
                     <div className="p-2.5 rounded-lg bg-primary/10 border border-primary/20">
                       <span className="text-primary font-semibold block text-[11px]">Monthly Net Take-Home</span>
@@ -453,6 +457,18 @@ export const SalaryStructureTab: React.FC = () => {
                     </span>
                   </div>
 
+                  {structure.bonuses > 0 && (
+                    <div className="flex items-center justify-between p-3 rounded-xl bg-emerald-500/10 border border-emerald-500/20">
+                      <div>
+                        <span className="text-xs font-semibold text-emerald-700 dark:text-emerald-400 block">Performance Bonus & Increment</span>
+                        <span className="text-[11px] text-muted">Additional compensation this period</span>
+                      </div>
+                      <span className="font-mono font-bold text-emerald-600 dark:text-emerald-400 text-sm">
+                        +{formatINR(structure.bonuses)}
+                      </span>
+                    </div>
+                  )}
+
                   <div className="flex items-center justify-between p-3 rounded-xl bg-indigo-500/10 border border-indigo-500/20">
                     <span className="text-xs font-bold text-foreground">Monthly Gross Salary</span>
                     <span className="font-mono font-bold text-primary text-base">
@@ -508,6 +524,18 @@ export const SalaryStructureTab: React.FC = () => {
                       </span>
                     </div>
                   )}
+
+                  {structure.monthly.custom_deductions && structure.monthly.custom_deductions.map((cd, idx) => (
+                    <div key={idx} className="flex items-center justify-between p-3 rounded-xl bg-purple-500/10 border border-purple-500/20">
+                      <div>
+                        <span className="text-xs font-semibold text-foreground block">{cd.type}</span>
+                        <span className="text-[11px] text-muted">{cd.reason || 'Custom employee deduction'}</span>
+                      </div>
+                      <span className="font-mono font-bold text-purple-600 dark:text-purple-400 text-sm">
+                        -{formatINR(cd.amount)}
+                      </span>
+                    </div>
+                  ))}
 
                   <div className="flex items-center justify-between p-3 rounded-xl bg-rose-500/10 border border-rose-500/20">
                     <span className="text-xs font-bold text-rose-600 dark:text-rose-400">Total Deductions</span>

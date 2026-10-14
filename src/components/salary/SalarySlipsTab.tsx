@@ -1,7 +1,7 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { Card } from '../common/Card';
 import { apiRequest } from '../../services/api';
-import { formatINR, formatCurrency } from '../../utils/currency';
+import { formatCurrency } from '../../utils/currency';
 import { showSuccessToast, showErrorToast } from '../../utils/toast';
 import { useOnClickOutside } from '../../hooks/useOnClickOutside';
 import {
@@ -13,6 +13,7 @@ import {
   ShieldCheck,
   X,
   Eye,
+  MinusCircle,
 } from 'lucide-react';
 
 interface EmployeeHistoryData {
@@ -44,6 +45,7 @@ interface EmployeeHistoryData {
     allowances: number;
     bonus_amount?: number;
     lop_deduction?: number;
+    other_deductions?: number;
     unpaid_leave_days?: number;
     gross_salary: number;
     total_deductions: number;
@@ -74,7 +76,100 @@ export const SalarySlipsTab: React.FC = () => {
   // Preview Modal
   const [previewSlip, setPreviewSlip] = useState<any | null>(null);
   const previewModalRef = useRef<HTMLDivElement>(null);
-  useOnClickOutside(previewModalRef, () => setPreviewSlip(null));
+  useOnClickOutside(previewModalRef, () => {
+    setPreviewSlip(null);
+    setHasOtherDeduction(false);
+    setDeductionName('');
+    setDeductionAmount('');
+  });
+
+  // Custom Deduction in View Slip Modal
+  const [hasOtherDeduction, setHasOtherDeduction] = useState(false);
+  const [deductionName, setDeductionName] = useState('');
+  const [deductionAmount, setDeductionAmount] = useState('');
+  const [savingDeduction, setSavingDeduction] = useState(false);
+
+  const handleAddCustomDeduction = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!previewSlip || !previewSlip.id) return;
+    const num = parseFloat(deductionAmount);
+    if (!deductionName.trim() || isNaN(num) || num <= 0) {
+      showErrorToast('Please enter both deduction name and a valid deduction amount.');
+      return;
+    }
+
+    setSavingDeduction(true);
+    try {
+      const res = await apiRequest<{ success: boolean; message: string; data: any }>(
+        `/salaries/payslip/${previewSlip.id}/deduction`,
+        {
+          method: 'POST',
+          body: JSON.stringify({
+            deduction_name: deductionName.trim(),
+            deduction_amount: num
+          })
+        }
+      );
+
+      showSuccessToast(res.message || 'Deduction added and salary slip updated');
+      const updated = res.data;
+      setPreviewSlip((prev: any) => ({
+        ...prev,
+        ...updated,
+        employee: prev.employee || updated.employee
+      }));
+
+      if (historyData) {
+        setHistoryData({
+          ...historyData,
+          payrollHistory: historyData.payrollHistory.map((p) =>
+            p.id === updated.id
+              ? { ...p, ...updated }
+              : p
+          )
+        });
+      }
+
+      setHasOtherDeduction(false);
+      setDeductionName('');
+      setDeductionAmount('');
+    } catch (err: any) {
+      showErrorToast(err.message || 'Failed to save deduction to salary slip.');
+    } finally {
+      setSavingDeduction(false);
+    }
+  };
+
+  const handleRemoveDeduction = async (deductionId: number) => {
+    if (!previewSlip || !previewSlip.id) return;
+    try {
+      const res = await apiRequest<{ success: boolean; message: string; data: any }>(
+        `/salaries/payslip/${previewSlip.id}/deduction/${deductionId}`,
+        {
+          method: 'DELETE'
+        }
+      );
+      showSuccessToast(res.message || 'Deduction removed successfully');
+      const updated = res.data;
+      setPreviewSlip((prev: any) => ({
+        ...prev,
+        ...updated,
+        employee: prev.employee || updated.employee
+      }));
+      if (historyData) {
+        setHistoryData({
+          ...historyData,
+          payrollHistory: historyData.payrollHistory.map((p) =>
+            p.id === updated.id
+              ? { ...p, ...updated }
+              : p
+          )
+        });
+      }
+    } catch (err: any) {
+      showErrorToast(err.message || 'Failed to remove deduction');
+    }
+  };
 
   const handleDownloadSlip = async (run: any) => {
     setDownloadingId(run.id);
@@ -326,7 +421,12 @@ export const SalarySlipsTab: React.FC = () => {
                     <div className="flex items-center gap-2 self-end sm:self-auto">
                       <button
                         type="button"
-                        onClick={() => setPreviewSlip({ ...run, employee: historyData.employee })}
+                        onClick={() => {
+                          setPreviewSlip({ ...run, employee: historyData.employee });
+                          setHasOtherDeduction(false);
+                          setDeductionName('');
+                          setDeductionAmount('');
+                        }}
                         className="px-3 py-1.5 rounded-lg bg-card hover:bg-background border border-border text-foreground hover:text-primary text-xs font-semibold flex items-center gap-1.5 transition cursor-pointer shadow-2xs"
                       >
                         <Eye className="w-3.5 h-3.5 text-primary" />
@@ -364,12 +464,10 @@ export const SalarySlipsTab: React.FC = () => {
               <div className="relative pl-6 space-y-4 before:absolute before:left-2 before:top-2 before:bottom-2 before:w-0.5 before:bg-border">
                 {historyData.salaryHistory.map((s) => {
                   const base = Number(s.base_salary) || 0;
-                  const monthlyBase = Math.round(base / 12);
-                  const hra = Math.round(monthlyBase * 0.40);
-                  const special = Math.round(monthlyBase * 0.20);
-                  const allowances = hra + special;
-                  const gross = monthlyBase + allowances + (Number(s.bonuses) || 0);
-                  const epf = Math.round(monthlyBase * 0.12);
+                  const monthlyTotal = Math.round(base / 12);
+                  const basicMonthly = Math.round(monthlyTotal * 0.50);
+                  const gross = monthlyTotal + (Number(s.bonuses) || 0);
+                  const epf = Math.round(basicMonthly * 0.12);
                   const pt = 200;
                   const health = 120;
                   const totalDeductions = epf + pt + health;
@@ -388,21 +486,29 @@ export const SalarySlipsTab: React.FC = () => {
                         <div className="grid grid-cols-2 sm:grid-cols-4 gap-2 pt-1 text-xs">
                           <div>
                             <span className="text-muted block text-[10px]">Monthly Base</span>
-                            <strong className="text-foreground font-mono">{formatINR(monthlyBase)}/mo</strong>
+                            <strong className="text-foreground font-mono">
+                              {formatCurrency(monthlyTotal, historyData.employee.currency, historyData.employee.country)}/mo
+                            </strong>
                           </div>
                           <div>
                             <span className="text-muted block text-[10px]">Performance Bonus</span>
                             <strong className={`font-mono ${Number(s.bonuses) > 0 ? 'text-emerald-600 dark:text-emerald-400 font-bold' : 'text-muted'}`}>
-                              {Number(s.bonuses) > 0 ? `+${formatINR(Number(s.bonuses))}` : '₹0.00'}
+                              {Number(s.bonuses) > 0
+                                ? `+${formatCurrency(Number(s.bonuses), historyData.employee.currency, historyData.employee.country)}`
+                                : formatCurrency(0, historyData.employee.currency, historyData.employee.country)}
                             </strong>
                           </div>
                           <div>
                             <span className="text-muted block text-[10px]">Monthly Deductions</span>
-                            <strong className="text-rose-500 font-mono">-{formatINR(totalDeductions)}/mo</strong>
+                            <strong className="text-rose-500 font-mono">
+                              -{formatCurrency(totalDeductions, historyData.employee.currency, historyData.employee.country)}/mo
+                            </strong>
                           </div>
                           <div>
                             <span className="text-muted block text-[10px]">Monthly Net Pay</span>
-                            <strong className="text-primary font-mono">{formatINR(netPay)}/mo</strong>
+                            <strong className="text-primary font-mono">
+                              {formatCurrency(netPay, historyData.employee.currency, historyData.employee.country)}/mo
+                            </strong>
                           </div>
                         </div>
                       </div>
@@ -418,7 +524,7 @@ export const SalarySlipsTab: React.FC = () => {
             <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 backdrop-blur-xs p-4">
               <div
                 ref={previewModalRef}
-                className="w-full max-w-2xl bg-card border border-border rounded-2xl p-6 shadow-2xl space-y-5 animate-in fade-in zoom-in-95 duration-150 max-h-[90vh] overflow-y-auto"
+                className="w-full max-w-2xl bg-card border border-border rounded-2xl p-6 shadow-2xl space-y-5 animate-in fade-in zoom-in-95 duration-150 max-h-[90vh] overflow-y-auto custom-scrollbar"
               >
                 {/* Modal Header */}
                 <div className="flex items-center justify-between border-b border-border pb-4">
@@ -481,16 +587,18 @@ export const SalarySlipsTab: React.FC = () => {
                       <span className="text-muted">Monthly Basic Pay:</span>
                       <strong className="font-mono text-foreground">{formatCurrency(previewSlip.basic_salary, previewSlip.employee?.currency, previewSlip.employee?.country)}</strong>
                     </div>
-                    <div className="flex justify-between">
+                    <div className="flex justify-between items-center">
                       <span className="text-muted">Allowances:</span>
                       <strong className="font-mono text-foreground">{formatCurrency(previewSlip.allowances, previewSlip.employee?.currency, previewSlip.employee?.country)}</strong>
                     </div>
-                    {Number(previewSlip.bonus_amount) > 0 && (
-                      <div className="flex justify-between">
-                        <span className="text-emerald-600 dark:text-emerald-400 font-medium">Performance Bonus:</span>
-                        <strong className="font-mono text-emerald-600 dark:text-emerald-400">+{formatCurrency(previewSlip.bonus_amount, previewSlip.employee?.currency, previewSlip.employee?.country)}</strong>
-                      </div>
-                    )}
+                    <div className="flex justify-between items-center">
+                      <span className={Number(previewSlip.bonus_amount) > 0 ? "text-emerald-600 dark:text-emerald-400 font-medium" : "text-muted"}>Performance Bonus:</span>
+                      <strong className={`font-mono ${Number(previewSlip.bonus_amount) > 0 ? "text-emerald-600 dark:text-emerald-400" : "text-foreground font-normal"}`}>
+                        {Number(previewSlip.bonus_amount) > 0
+                          ? `+${formatCurrency(previewSlip.bonus_amount, previewSlip.employee?.currency, previewSlip.employee?.country)}`
+                          : formatCurrency(0, previewSlip.employee?.currency, previewSlip.employee?.country)}
+                      </strong>
+                    </div>
                     <div className="flex justify-between border-t border-border pt-2 font-bold">
                       <span className="text-foreground">Gross Earnings:</span>
                       <span className="font-mono text-primary">{formatCurrency(previewSlip.gross_salary, previewSlip.employee?.currency, previewSlip.employee?.country)}</span>
@@ -501,15 +609,30 @@ export const SalarySlipsTab: React.FC = () => {
                   <div className="p-3.5 rounded-xl bg-background border border-border space-y-2.5">
                     <h4 className="font-bold text-rose-500 border-b border-border pb-1.5">Deductions</h4>
                     {previewSlip.deductions && previewSlip.deductions.length > 0 ? (
-                      previewSlip.deductions.map((d: any, idx: number) => (
-                        <div key={idx} className="flex justify-between">
-                          <div>
-                            <span className="text-foreground font-semibold block">{d.deduction_type}</span>
-                            <span className="text-[10px] text-muted">{d.reason}</span>
+                      previewSlip.deductions.map((d: any, idx: number) => {
+                        const isCustom = d.id && !['Employee Provident Fund (EPF)', 'Professional Tax', 'Health & Medical Premium', 'Loss of Pay (LOP)'].includes(d.deduction_type);
+                        return (
+                          <div key={idx} className="flex justify-between items-center">
+                            <div>
+                              <span className="text-foreground font-semibold block">{d.deduction_type}</span>
+                              <span className="text-[10px] text-muted">{d.reason}</span>
+                            </div>
+                            <div className="flex items-center gap-1.5">
+                              <strong className="font-mono text-rose-500">-{formatCurrency(d.amount, previewSlip.employee?.currency, previewSlip.employee?.country)}</strong>
+                              {isCustom && (
+                                <button
+                                  type="button"
+                                  onClick={() => handleRemoveDeduction(d.id)}
+                                  className="text-[10px] text-rose-500 hover:text-rose-700 hover:underline px-1 py-0.5 rounded cursor-pointer font-medium"
+                                  title="Remove this custom deduction"
+                                >
+                                  Remove
+                                </button>
+                              )}
+                            </div>
                           </div>
-                          <strong className="font-mono text-rose-500">-{formatCurrency(d.amount, previewSlip.employee?.currency, previewSlip.employee?.country)}</strong>
-                        </div>
-                      ))
+                        );
+                      })
                     ) : (
                       <div className="flex justify-between">
                         <span className="text-muted">Statutory Deductions:</span>
@@ -526,11 +649,128 @@ export const SalarySlipsTab: React.FC = () => {
                         <strong className="font-mono text-rose-500">-{formatCurrency(previewSlip.lop_deduction, previewSlip.employee?.currency, previewSlip.employee?.country)}</strong>
                       </div>
                     )}
+                    {/* Explicit Other Deductions fallback display if not already in deductions list */}
+                    {Number(previewSlip.other_deductions) > 0 && !previewSlip.deductions?.some((d: any) => !['Employee Provident Fund (EPF)', 'Professional Tax', 'Health & Medical Premium', 'Loss of Pay (LOP)'].includes(d.deduction_type)) && (
+                      <div className="flex justify-between">
+                        <div>
+                          <span className="text-foreground font-semibold block">Other Deduction</span>
+                          <span className="text-[10px] text-muted">Approved custom deduction</span>
+                        </div>
+                        <strong className="font-mono text-rose-500">-{formatCurrency(previewSlip.other_deductions, previewSlip.employee?.currency, previewSlip.employee?.country)}</strong>
+                      </div>
+                    )}
                     <div className="flex justify-between border-t border-border pt-2 font-bold">
                       <span className="text-rose-600">Total Deductions:</span>
                       <span className="font-mono text-rose-600">-{formatCurrency(previewSlip.total_deductions, previewSlip.employee?.currency, previewSlip.employee?.country)}</span>
                     </div>
                   </div>
+                </div>
+
+                {/* Add Other Deduction Option */}
+                <div className="p-3.5 rounded-xl bg-background border border-border space-y-3">
+                  <div className="flex items-center justify-between">
+                    <div>
+                      <span className="text-xs font-semibold text-foreground block">
+                        Add any other deduction?
+                      </span>
+                      <span className="text-[11px] text-muted">
+                        Deduct custom items like loan EMI, advance recovery, asset damage, or penalties.
+                      </span>
+                    </div>
+                    <div className="flex items-center gap-1 p-0.5 bg-card rounded-lg border border-border">
+                      <button
+                        type="button"
+                        onClick={() => {
+                          setHasOtherDeduction(false);
+                          setDeductionName('');
+                          setDeductionAmount('');
+                        }}
+                        className={`px-3 py-1 text-xs font-semibold rounded-md transition cursor-pointer ${
+                          !hasOtherDeduction
+                            ? 'bg-muted/30 text-foreground font-bold shadow-2xs'
+                            : 'text-muted hover:text-foreground'
+                        }`}
+                      >
+                        No
+                      </button>
+                      <button
+                        type="button"
+                        onClick={() => setHasOtherDeduction(true)}
+                        className={`px-3 py-1 text-xs font-semibold rounded-md transition cursor-pointer ${
+                          hasOtherDeduction
+                            ? 'bg-primary text-white shadow-2xs'
+                            : 'text-muted hover:text-foreground'
+                        }`}
+                      >
+                        Yes
+                      </button>
+                    </div>
+                  </div>
+
+                  {hasOtherDeduction && (
+                    <form onSubmit={handleAddCustomDeduction} className="pt-2.5 border-t border-border space-y-3">
+                      <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                        <div>
+                          <label className="block text-[11px] font-semibold text-foreground mb-1">
+                            Deduction Name / Reason
+                          </label>
+                          <input
+                            type="text"
+                            value={deductionName}
+                            onChange={(e) => setDeductionName(e.target.value)}
+                            placeholder="e.g. Laptop Loan, Advance Recovery, Asset Damage"
+                            required
+                            className="w-full px-3 py-2 text-xs rounded-lg bg-card border border-border text-foreground focus:ring-1 focus:ring-primary"
+                          />
+                        </div>
+                        <div>
+                          <label className="block text-[11px] font-semibold text-foreground mb-1">
+                            Deduction Amount ({previewSlip.employee?.currency || (previewSlip.employee?.country === 'India' ? 'INR' : 'USD')})
+                          </label>
+                          <div className="relative">
+                            <span className="absolute left-3 top-2.5 text-muted text-xs font-bold font-mono">
+                              {previewSlip.employee?.currency === 'USD' ? '$' : (previewSlip.employee?.currency === 'EUR' ? '€' : (previewSlip.employee?.currency === 'GBP' ? '£' : '₹'))}
+                            </span>
+                            <input
+                              type="number"
+                              min="0.01"
+                              step="any"
+                              value={deductionAmount}
+                              onChange={(e) => setDeductionAmount(e.target.value)}
+                              placeholder="0.00"
+                              required
+                              className="w-full pl-7 pr-3 py-2 text-xs font-mono rounded-lg bg-card border border-border text-foreground focus:ring-1 focus:ring-primary"
+                            />
+                          </div>
+                        </div>
+                      </div>
+                      <div className="flex justify-end gap-2">
+                        <button
+                          type="button"
+                          onClick={() => {
+                            setHasOtherDeduction(false);
+                            setDeductionName('');
+                            setDeductionAmount('');
+                          }}
+                          className="px-3 py-1.5 rounded-lg border border-border text-xs text-muted hover:text-foreground cursor-pointer"
+                        >
+                          Cancel
+                        </button>
+                        <button
+                          type="submit"
+                          disabled={savingDeduction}
+                          className="px-4 py-1.5 rounded-lg bg-rose-600 hover:bg-rose-700 text-white text-xs font-semibold flex items-center gap-1.5 cursor-pointer shadow-2xs transition disabled:opacity-50"
+                        >
+                          {savingDeduction ? (
+                            <Loader2 className="w-3.5 h-3.5 animate-spin" />
+                          ) : (
+                            <MinusCircle className="w-3.5 h-3.5" />
+                          )}
+                          Deduct & Save to Slip
+                        </button>
+                      </div>
+                    </form>
+                  )}
                 </div>
 
                 {/* Net Take-Home Highlight Box */}

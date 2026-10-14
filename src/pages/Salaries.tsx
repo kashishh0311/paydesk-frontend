@@ -202,7 +202,8 @@ export const Salaries: React.FC = () => {
           base_salary: updatedBase,
           bonuses: updatedBonuses,
           deductions: updatedDeductions,
-          reason: revisionReason
+          reason: revisionReason,
+          is_structure_edit: true
         })
       });
 
@@ -399,6 +400,7 @@ export const Salaries: React.FC = () => {
                     <th className="py-3 px-3.5">Department</th>
                     <th className="py-3 px-3.5">Annual Income</th>
                     <th className="py-3 px-3.5">Monthly Income</th>
+                    <th className="py-3 px-3.5">Bonus</th>
                     <th className="py-3 px-3.5">Deductions</th>
                     <th className="py-3 px-3.5">Net Take-Home</th>
                     <th className="py-3 px-3.5 text-right">Actions</th>
@@ -407,7 +409,7 @@ export const Salaries: React.FC = () => {
                 <tbody className="divide-y divide-border text-foreground">
                   {salaries.length === 0 ? (
                     <tr>
-                      <td colSpan={7} className="py-12 text-center text-sm text-muted">
+                      <td colSpan={8} className="py-12 text-center text-sm text-muted">
                         No salary records found for the selected criteria.
                       </td>
                     </tr>
@@ -430,8 +432,22 @@ export const Salaries: React.FC = () => {
                         <td className="py-3 px-3.5 font-mono font-medium text-primary">
                           {formatCurrency(Math.round(s.baseSalary / 12), s.currency, s.country)}/mo
                         </td>
+                        <td className="py-3 px-3.5 font-mono font-medium">
+                          {s.bonuses > 0 ? (
+                            <span className="text-emerald-600 dark:text-emerald-400 font-semibold">
+                              +{formatCurrency(s.bonuses, s.currency, s.country)}
+                            </span>
+                          ) : (
+                            <span className="text-muted font-normal">
+                              {formatCurrency(0, s.currency, s.country)}
+                            </span>
+                          )}
+                        </td>
                         <td className="py-3 px-3.5 font-mono text-red-500">
-                          -{formatCurrency(s.deductions, s.currency, s.country)}
+                          <div>-{formatCurrency(s.deductions, s.currency, s.country)}</div>
+                          <div className="text-[11px] text-red-400 font-normal">
+                            -{formatCurrency(Math.round(s.deductions / 12), s.currency, s.country)}/mo
+                          </div>
                         </td>
                         <td className="py-3 px-3.5 font-mono font-bold text-foreground">
                           {formatCurrency(s.netSalary, s.currency, s.country)}
@@ -625,18 +641,20 @@ export const Salaries: React.FC = () => {
                   </span>
                 </div>
                 <div className="pt-2 sm:pt-0 sm:px-3">
-                  <span className="text-[10px] text-muted font-medium uppercase tracking-wider block">Allowances</span>
+                  <span className="text-[10px] text-muted font-medium uppercase tracking-wider block">Bonus & Perks</span>
                   <span className="text-sm font-bold font-mono text-foreground mt-0.5 block">
                     +{formatCurrency(viewSalaryRecord.bonuses, viewSalaryRecord.currency, viewSalaryRecord.country)}
                   </span>
-                  <span className="text-[10px] text-muted block">Bonus & Perks</span>
+                  <span className="text-[10px] text-muted block">Performance Bonus</span>
                 </div>
                 <div className="pt-2 sm:pt-0 sm:px-3">
                   <span className="text-[10px] text-muted font-medium uppercase tracking-wider block">Deductions</span>
                   <span className="text-sm font-bold font-mono text-rose-500 mt-0.5 block">
                     -{formatCurrency(viewSalaryRecord.deductions, viewSalaryRecord.currency, viewSalaryRecord.country)}
                   </span>
-                  <span className="text-[10px] text-muted block">Statutory & LOP</span>
+                  <span className="text-[10px] text-rose-400 font-mono block">
+                    -{formatCurrency(Math.round(viewSalaryRecord.deductions / 12), viewSalaryRecord.currency, viewSalaryRecord.country)}/mo
+                  </span>
                 </div>
                 <div className="pt-2 sm:pt-0 sm:pl-3">
                   <span className="text-[10px] text-primary font-semibold uppercase tracking-wider block">Net Take-Home</span>
@@ -650,13 +668,7 @@ export const Salaries: React.FC = () => {
 
             {/* Attendance & Leave Summary (Clean 3-pill horizontal strip) */}
             {(() => {
-              const base = viewSalaryRecord.baseSalary;
-              const monthlyBase = Math.round(base / 12);
               const unpaidDays = viewSalaryRecord.unpaidLeaveDays || 0;
-              const perDayRate = Math.round(monthlyBase / 30);
-              const lop = viewSalaryRecord.lopDeduction && viewSalaryRecord.lopDeduction > 0
-                ? viewSalaryRecord.lopDeduction
-                : (unpaidDays > 0 ? perDayRate * unpaidDays : 0);
 
               return (
                 <div className="space-y-2">

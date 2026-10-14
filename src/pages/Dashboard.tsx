@@ -236,9 +236,12 @@ export const Dashboard: React.FC = () => {
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-5">
         <CurrencyDistributionChart data={stats?.countryBreakdown || []} />
 
-        {/* Recent Salary Revision Audit List */}
-        <Card title="Recent Compensation Actions" subtitle="Live compliance audit tracking from database">
-          <div className="overflow-x-auto">
+        <Card
+          title="Recent Compensation Actions"
+          subtitle="Live compliance audit tracking from database"
+          className="h-full flex flex-col"
+        >
+          <div className="flex-1 overflow-x-auto overflow-y-auto custom-scrollbar">
             <table className="w-full text-left text-sm">
               <thead className="bg-background text-muted border-b border-border uppercase tracking-wider text-xs">
                 <tr>

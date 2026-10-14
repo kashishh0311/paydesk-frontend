@@ -1,6 +1,7 @@
 import React, { useState } from 'react';
 import { Card } from '../common/Card';
-import { TrendingUp, Globe } from 'lucide-react';
+import { Globe } from 'lucide-react';
+import { formatINR } from '../../utils/currency';
 
 export interface MonthlyTrendItem {
   period: string;
@@ -27,38 +28,12 @@ export interface CountryBreakdownItem {
   totalSpend: number;
 }
 
-import { formatINR } from '../../utils/currency';
-
-// -------------------------------------------------------------
-// Helper for SVG smooth Bezier path
-// -------------------------------------------------------------
-function createSmoothPath(points: { x: number; y: number }[]): string {
-  if (points.length === 0) return '';
-  if (points.length === 1) return `M ${points[0].x} ${points[0].y}`;
-
-  let path = `M ${points[0].x} ${points[0].y}`;
-  for (let i = 0; i < points.length - 1; i++) {
-    const p0 = points[i === 0 ? 0 : i - 1];
-    const p1 = points[i];
-    const p2 = points[i + 1];
-    const p3 = points[i + 2] || p2;
-
-    const cp1x = p1.x + (p2.x - p0.x) / 6;
-    const cp1y = p1.y + (p2.y - p0.y) / 6;
-    const cp2x = p2.x - (p3.x - p1.x) / 6;
-    const cp2y = p2.y - (p3.y - p1.y) / 6;
-
-    path += ` C ${cp1x.toFixed(1)} ${cp1y.toFixed(1)}, ${cp2x.toFixed(1)} ${cp2y.toFixed(1)}, ${p2.x.toFixed(1)} ${p2.y.toFixed(1)}`;
-  }
-  return path;
-}
-
 function formatCurrencyCompact(val: number): string {
   return formatINR(val, { compact: true });
 }
 
 // -------------------------------------------------------------
-// 1. Soft, Compact Payroll Trend Chart (Side-by-Side Ready)
+// 1. Simple, Clean Monthly Payroll Bar Chart (Monochromatic)
 // -------------------------------------------------------------
 export const PayrollTrendChart: React.FC<{ data: MonthlyTrendItem[] }> = ({ data }) => {
   const [hoveredIndex, setHoveredIndex] = useState<number | null>(null);
@@ -74,11 +49,11 @@ export const PayrollTrendChart: React.FC<{ data: MonthlyTrendItem[] }> = ({ data
   }
 
   const svgWidth = 580;
-  const svgHeight = 220;
-  const paddingLeft = 78;
-  const paddingRight = 24;
-  const paddingTop = 20;
-  const paddingBottom = 36;
+  const svgHeight = 200;
+  const paddingLeft = 75;
+  const paddingRight = 20;
+  const paddingTop = 18;
+  const paddingBottom = 26;
 
   const chartWidth = svgWidth - paddingLeft - paddingRight;
   const chartHeight = svgHeight - paddingTop - paddingBottom;
@@ -86,73 +61,76 @@ export const PayrollTrendChart: React.FC<{ data: MonthlyTrendItem[] }> = ({ data
   const values = data.map((d) => d.spend);
   const rawMin = Math.min(...values);
   const rawMax = Math.max(...values);
-  const minVal = Math.max(0, rawMin * 0.92);
-  const maxVal = rawMax * 1.05 || 1;
+  const minVal = Math.max(0, rawMin * 0.90);
+  const maxVal = rawMax * 1.04 || 1;
 
-  const points = data.map((item, idx) => {
-    const x = paddingLeft + (idx / Math.max(1, data.length - 1)) * chartWidth;
+  const slotWidth = chartWidth / data.length;
+  const barWidth = Math.min(20, Math.max(14, slotWidth * 0.52));
+
+  const items = data.map((item, idx) => {
+    const centerX = paddingLeft + (idx + 0.5) * slotWidth;
     const normalizedY = (item.spend - minVal) / (maxVal - minVal || 1);
-    const y = paddingTop + chartHeight - normalizedY * chartHeight;
-    return { x, y, item };
+    const barHeight = Math.max(8, normalizedY * chartHeight);
+    const y = paddingTop + chartHeight - barHeight;
+    return {
+      idx,
+      item,
+      centerX,
+      barX: centerX - barWidth / 2,
+      barY: y,
+      barHeight,
+      slotX: paddingLeft + idx * slotWidth
+    };
   });
 
-  const linePath = createSmoothPath(points.map((p) => ({ x: p.x, y: p.y })));
-  const areaPath = `${linePath} L ${points[points.length - 1].x} ${paddingTop + chartHeight} L ${points[0].x} ${paddingTop + chartHeight} Z`;
-
-  // Soft grid tick marks (3 ticks)
+  // Grid tick marks (3 ticks)
   const yTicks = [0, 0.5, 1].map((pct) => {
     const val = minVal + pct * (maxVal - minVal);
     const y = paddingTop + chartHeight - pct * chartHeight;
     return { y, label: formatCurrencyCompact(val) };
   });
 
-  const activePoint = hoveredIndex !== null ? points[hoveredIndex] : points[points.length - 1];
+  const activeIndex = hoveredIndex !== null ? hoveredIndex : items.length - 1;
+  const activeItem = items[activeIndex];
 
   return (
     <Card
       title="Monthly Payroll Progression"
       subtitle="12-month budget run-rate and salary actions"
+      className="h-full flex flex-col justify-between"
       action={
-        <span className="inline-flex items-center gap-1 text-xs font-medium text-muted">
-          <TrendingUp className="w-3.5 h-3.5 text-primary" />
-          <span>+16% Run-Rate</span>
+        <span className="text-xs text-muted font-medium">
+          12-Month Progression
         </span>
       }
     >
       <div className="space-y-3">
-        {/* Soft Sub-header Strip */}
-        <div className="flex items-center justify-between px-3 py-2 rounded-xl bg-background border border-border text-xs">
+        {/* Simple Clean Sub-header */}
+        <div className="flex items-center justify-between px-3.5 py-2 rounded-xl bg-background border border-border text-xs">
           <div>
             <span className="text-muted">
-              {hoveredIndex !== null ? activePoint.item.label : 'Current Run-Rate'}:
+              {hoveredIndex !== null ? activeItem.item.label : 'Current Month'}:
             </span>{' '}
-            <strong className="text-foreground font-semibold">
-              {formatINR(activePoint.item.spend)}
+            <strong className="text-foreground font-semibold font-mono">
+              {formatINR(activeItem.item.spend)}
             </strong>
           </div>
           <div className="text-muted">
             <span>Avg Base: </span>
-            <strong className="text-foreground font-medium">
-              {formatINR(activePoint.item.avgBase)}
+            <strong className="text-foreground font-medium font-mono">
+              {formatINR(activeItem.item.avgBase)}
             </strong>
           </div>
         </div>
 
-        {/* Compact Soft SVG Line Chart */}
-        <div className="relative w-full select-none pt-1">
+        {/* Clean, Simple Monochromatic Bar Chart */}
+        <div className="relative w-full select-none pt-0.5">
           <svg
             viewBox={`0 0 ${svgWidth} ${svgHeight}`}
             className="w-full h-auto overflow-visible"
             preserveAspectRatio="xMidYMid meet"
           >
-            <defs>
-              <linearGradient id="softAreaGrad" x1="0" y1="0" x2="0" y2="1">
-                <stop offset="0%" stopColor="#4f46e5" stopOpacity="0.22" />
-                <stop offset="100%" stopColor="#4f46e5" stopOpacity="0.0" />
-              </linearGradient>
-            </defs>
-
-            {/* Subtle Grid Lines */}
+            {/* Subtle Grid Guidelines */}
             {yTicks.map((tick, i) => (
               <g key={i}>
                 <line
@@ -166,7 +144,7 @@ export const PayrollTrendChart: React.FC<{ data: MonthlyTrendItem[] }> = ({ data
                 />
                 <text
                   x={paddingLeft - 8}
-                  y={tick.y + 3}
+                  y={tick.y + 3.5}
                   textAnchor="end"
                   fill="currentColor"
                   className="text-[10px] fill-muted font-mono"
@@ -176,58 +154,58 @@ export const PayrollTrendChart: React.FC<{ data: MonthlyTrendItem[] }> = ({ data
               </g>
             ))}
 
-            {/* Area Fill */}
-            <path d={areaPath} fill="url(#softAreaGrad)" />
-
-            {/* Smooth Line */}
-            <path
-              d={linePath}
-              fill="none"
-              stroke="#6366f1"
-              strokeWidth="2.4"
-              strokeLinecap="round"
-              strokeLinejoin="round"
-            />
-
-            {/* Interactive Points and Labels */}
-            {points.map((pt, idx) => {
-              const isHovered = hoveredIndex === idx;
-              // Show label every 2 months or on hover to keep x-axis uncluttered
-              const showLabel = idx % 2 === 0 || idx === points.length - 1 || isHovered;
+            {/* Simple Clean Uniform Bars */}
+            {items.map((it) => {
+              const isHovered = hoveredIndex === it.idx;
 
               return (
-                <g key={idx}>
-                  <circle
-                    cx={pt.x}
-                    cy={pt.y}
-                    r={isHovered ? 5 : 2.5}
-                    fill={isHovered ? '#4f46e5' : '#818cf8'}
-                    stroke="currentColor"
-                    strokeWidth="1"
-                    className="transition-all duration-150"
-                  />
-                  {showLabel && (
-                    <text
-                      x={pt.x}
-                      y={svgHeight - 8}
-                      textAnchor="middle"
-                      className={`text-[10px] font-medium transition-colors ${isHovered ? 'fill-primary font-bold' : 'fill-muted'
-                        }`}
-                    >
-                      {pt.item.label}
-                    </text>
-                  )}
-                  {/* Invisible hit target for hover */}
+                <g key={it.idx}>
                   <rect
-                    x={pt.x - chartWidth / (data.length * 2)}
-                    y={paddingTop}
-                    width={chartWidth / data.length}
-                    height={chartHeight + 20}
+                    x={it.barX}
+                    y={it.barY}
+                    width={barWidth}
+                    height={it.barHeight}
+                    rx="3"
+                    ry="3"
+                    fill="#4f46e5"
+                    className="transition-opacity duration-150"
+                    opacity={isHovered ? 1 : 0.8}
+                  />
+
+                  {/* Interactive Hit Box */}
+                  <rect
+                    x={it.slotX}
+                    y={paddingTop - 10}
+                    width={slotWidth}
+                    height={chartHeight + 35}
                     fill="transparent"
                     className="cursor-pointer"
-                    onMouseEnter={() => setHoveredIndex(idx)}
+                    onMouseEnter={() => setHoveredIndex(it.idx)}
                     onMouseLeave={() => setHoveredIndex(null)}
                   />
+                </g>
+              );
+            })}
+
+            {/* X-Axis Month Labels */}
+            {items.map((it) => {
+              const isHovered = hoveredIndex === it.idx;
+              const showLabel = it.idx % 2 === 0 || it.idx === items.length - 1 || isHovered;
+
+              return (
+                <g key={`lbl-${it.idx}`}>
+                  {showLabel && (
+                    <text
+                      x={it.centerX}
+                      y={svgHeight - 10}
+                      textAnchor="middle"
+                      className={`text-[10px] font-medium transition-colors ${
+                        isHovered ? 'fill-primary font-bold' : 'fill-muted'
+                      }`}
+                    >
+                      {it.item.label}
+                    </text>
+                  )}
                 </g>
               );
             })}
@@ -239,7 +217,7 @@ export const PayrollTrendChart: React.FC<{ data: MonthlyTrendItem[] }> = ({ data
 };
 
 // -------------------------------------------------------------
-// 2. Simple, Soft Department Bar Chart (No Rainbow, Uniform Soft Bars)
+// 2. Department Bar Chart with Custom Blue Scrollbar
 // -------------------------------------------------------------
 export const DepartmentBarChart: React.FC<{ data: DeptBreakdownItem[] }> = ({ data }) => {
   const maxSpend = Math.max(...(data || []).map((d) => d.totalSpend), 1);
@@ -248,24 +226,25 @@ export const DepartmentBarChart: React.FC<{ data: DeptBreakdownItem[] }> = ({ da
     <Card
       title="Department Compensation Breakdown"
       subtitle="Spend and workforce distribution across operating departments"
+      className="h-full flex flex-col"
       action={
         <span className="text-xs text-muted font-medium">
           {data?.length || 0} Departments
         </span>
       }
     >
-      <div className="space-y-2.5">
+      <div className="flex-1 space-y-1 overflow-y-auto pr-1.5 custom-scrollbar">
         {(data || []).map((dept, idx) => {
           const barWidth = Math.max(6, Math.round((dept.totalSpend / maxSpend) * 100));
 
           return (
             <div
               key={dept.dept}
-              className="p-2 rounded-xl hover:bg-background/80 transition-colors duration-150 border border-transparent hover:border-border/60"
+              className="p-1.5 rounded-lg hover:bg-background/80 transition-colors duration-150 border border-transparent hover:border-border/60"
             >
-              <div className="flex items-center justify-between text-xs mb-1.5 gap-2">
+              <div className="flex items-center justify-between text-xs mb-1 gap-2">
                 <div className="flex items-center gap-2">
-                  <span className="w-5 h-5 rounded-md bg-background border border-border flex items-center justify-center font-bold text-[10px] text-muted font-mono shrink-0">
+                  <span className="w-4 h-4 rounded bg-background border border-border flex items-center justify-center font-bold text-[9px] text-muted font-mono shrink-0">
                     {idx + 1}
                   </span>
                   <span className="font-semibold text-foreground text-xs">{dept.dept}</span>
@@ -273,7 +252,7 @@ export const DepartmentBarChart: React.FC<{ data: DeptBreakdownItem[] }> = ({ da
                     ({dept.employees.toLocaleString()} staff • {dept.pct}%)
                   </span>
                 </div>
-                <div className="flex items-center gap-2.5 shrink-0">
+                <div className="flex items-center gap-2 shrink-0">
                   <span className="text-muted text-[11px]">
                     Avg: <strong className="text-foreground">{dept.avg}</strong>
                   </span>
@@ -299,7 +278,7 @@ export const DepartmentBarChart: React.FC<{ data: DeptBreakdownItem[] }> = ({ da
 };
 
 // -------------------------------------------------------------
-// 3. Simple, Soft Currency & Regional Allocation
+// 3. Global Currency & Regional Allocation with Custom Blue Scrollbar
 // -------------------------------------------------------------
 export const CurrencyDistributionChart: React.FC<{ data: CountryBreakdownItem[] }> = ({ data }) => {
   if (!data || data.length === 0) return null;
@@ -311,6 +290,7 @@ export const CurrencyDistributionChart: React.FC<{ data: CountryBreakdownItem[] 
     <Card
       title="Global Currency & Region Allocation"
       subtitle="Headcount and compensation distributed across currency hubs"
+      className="h-full flex flex-col"
       action={
         <div className="flex items-center gap-1 text-xs text-muted">
           <Globe className="w-3.5 h-3.5 text-primary" />
@@ -318,7 +298,7 @@ export const CurrencyDistributionChart: React.FC<{ data: CountryBreakdownItem[] 
         </div>
       }
     >
-      <div className="space-y-2.5">
+      <div className="flex-1 space-y-1 overflow-y-auto pr-1.5 custom-scrollbar">
         {data.map((hub) => {
           const pct = Math.round((hub.employees / (totalEmployees || 1)) * 100);
           const barWidth = Math.max(6, Math.round((hub.employees / maxEmployees) * 100));
@@ -326,11 +306,11 @@ export const CurrencyDistributionChart: React.FC<{ data: CountryBreakdownItem[] 
           return (
             <div
               key={hub.currency}
-              className="p-2 rounded-xl hover:bg-background/80 transition-colors duration-150 border border-transparent hover:border-border/60"
+              className="p-1.5 rounded-lg hover:bg-background/80 transition-colors duration-150 border border-transparent hover:border-border/60"
             >
-              <div className="flex items-center justify-between text-xs mb-1.5 gap-2">
+              <div className="flex items-center justify-between text-xs mb-1 gap-2">
                 <div className="flex items-center gap-2">
-                  <span className="px-1.5 py-0.5 rounded-md bg-background border border-border font-mono font-bold text-[11px] text-primary shrink-0">
+                  <span className="px-1.5 py-0.2 rounded bg-background border border-border font-mono font-bold text-[10px] text-primary shrink-0">
                     {hub.currency}
                   </span>
                   <span className="font-semibold text-foreground text-xs">{hub.country}</span>
@@ -357,4 +337,3 @@ export const CurrencyDistributionChart: React.FC<{ data: CountryBreakdownItem[] 
     </Card>
   );
 };
-
