@@ -496,7 +496,7 @@ export const PayrollProcessingTab: React.FC = () => {
                     </td>
                     <td className="py-2.5 px-3 text-right">
                       <a
-                        href={`http://localhost:5000/api/v1/payroll/payslip/${r.id}/html`}
+                        href={`/payroll/payslip/${r.id}/html`}
                         target="_blank"
                         rel="noreferrer"
                         className="inline-flex items-center gap-1 px-2 py-1 rounded-md bg-background border border-border hover:bg-card text-primary font-semibold text-[11px] transition"

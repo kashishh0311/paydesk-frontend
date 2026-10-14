@@ -255,7 +255,7 @@ export const Salaries: React.FC = () => {
                 Export
               </Button>
               {isExportMenuOpen && (
-                <div className="absolute right-0 mt-2 w-48 bg-card border border-border rounded-xl shadow-xl z-30 p-1.5 space-y-1">
+                <div className="absolute left-0 sm:left-auto sm:right-0 mt-2 w-48 max-w-[calc(100vw-2rem)] bg-card border border-border rounded-xl shadow-xl z-30 p-1.5 space-y-1">
                   <button
                     onClick={() => handleExport('csv')}
                     className="w-full flex items-center gap-2 px-3 py-2 rounded-lg text-xs text-foreground hover:bg-background transition text-left cursor-pointer"

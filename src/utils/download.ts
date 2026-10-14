@@ -6,7 +6,7 @@ import { showErrorToast } from './toast';
  */
 export const downloadExport = async (endpoint: string, defaultFilename: string): Promise<void> => {
   try {
-    const baseUrl = import.meta.env.VITE_API_URL || 'http://localhost:5000/api/v1';
+    const baseUrl = import.meta.env.VITE_API_BASE_URL || import.meta.env.VITE_API_URL || '';
     const token = typeof window !== 'undefined' ? localStorage.getItem('paydesk_token') : null;
     const headers: Record<string, string> = {};
     if (token) {
@@ -53,8 +53,8 @@ export const downloadExport = async (endpoint: string, defaultFilename: string):
     link.click();
     document.body.removeChild(link);
     window.URL.revokeObjectURL(url);
-  } catch (error) {
+  } catch (error: any) {
     console.error('Download export error:', error);
-    showErrorToast('Failed to download export file. Please verify network access.');
+    showErrorToast(error?.message || 'Failed to download export file. Please verify network access.');
   }
 };

@@ -181,7 +181,7 @@ export const SalarySlipsTab: React.FC = () => {
       const token = typeof window !== 'undefined'
         ? (localStorage.getItem('paydesk_token') || localStorage.getItem('token') || '')
         : '';
-      const baseUrl = import.meta.env.VITE_API_URL || 'http://localhost:5000/api/v1';
+      const baseUrl = import.meta.env.VITE_API_BASE_URL || import.meta.env.VITE_API_URL || '';
       const response = await fetch(`${baseUrl}/payroll/payslip/${run.id}/download`, {
         headers: {
           Authorization: token ? `Bearer ${token}` : ''
@@ -683,22 +683,20 @@ export const SalarySlipsTab: React.FC = () => {
                           setDeductionName('');
                           setDeductionAmount('');
                         }}
-                        className={`px-3 py-1 text-xs font-semibold rounded-md transition cursor-pointer ${
-                          !hasOtherDeduction
-                            ? 'bg-muted/30 text-foreground font-bold shadow-2xs'
-                            : 'text-muted hover:text-foreground'
-                        }`}
+                        className={`px-3 py-1 text-xs font-semibold rounded-md transition cursor-pointer ${!hasOtherDeduction
+                          ? 'bg-muted/30 text-foreground font-bold shadow-2xs'
+                          : 'text-muted hover:text-foreground'
+                          }`}
                       >
                         No
                       </button>
                       <button
                         type="button"
                         onClick={() => setHasOtherDeduction(true)}
-                        className={`px-3 py-1 text-xs font-semibold rounded-md transition cursor-pointer ${
-                          hasOtherDeduction
-                            ? 'bg-primary text-white shadow-2xs'
-                            : 'text-muted hover:text-foreground'
-                        }`}
+                        className={`px-3 py-1 text-xs font-semibold rounded-md transition cursor-pointer ${hasOtherDeduction
+                          ? 'bg-primary text-white shadow-2xs'
+                          : 'text-muted hover:text-foreground'
+                          }`}
                       >
                         Yes
                       </button>
