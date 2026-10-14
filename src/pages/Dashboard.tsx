@@ -4,11 +4,13 @@ import { apiRequest } from '../services/api';
 import {
   Users,
   Banknote,
-  TrendingUp,
   Wallet,
   ArrowUpRight,
   CheckCircle2,
-  Loader2
+  Loader2,
+  Clock,
+  ShieldAlert,
+  CreditCard
 } from 'lucide-react';
 import {
   PayrollTrendChart,
@@ -18,6 +20,7 @@ import {
   type DeptBreakdownItem,
   type CountryBreakdownItem
 } from '../components/dashboard/DashboardCharts';
+import { formatINR } from '../utils/currency';
 
 interface StatsOverview {
   totalEmployees: number;
@@ -25,6 +28,11 @@ interface StatsOverview {
   departmentsCount: number;
   countriesCount: number;
   totalPayrollBudget: number;
+  monthlyPayroll?: number;
+  netSalaryPayable?: number;
+  totalDeductions?: number;
+  pendingPayrollApprovals?: number;
+  paidSalaries?: number;
   averageBaseSalary: number;
   averageNetSalary?: number;
   departmentBreakdown: DeptBreakdownItem[];
@@ -109,46 +117,65 @@ export const Dashboard: React.FC = () => {
     );
   }
 
+  // 6 Summary KPI Cards required by specification
   const kpiCards = [
     {
-      title: 'Total Workforce',
+      title: 'Total Employees',
       value: (stats?.totalEmployees || 10000).toLocaleString(),
-      change: '100% verified database records',
+      change: `${(stats?.activeEmployees || 9820).toLocaleString()} active in system`,
       icon: Users,
       color: 'text-indigo-500',
       bgColor: 'bg-indigo-500/10'
     },
     {
-      title: 'Global Payroll Spend',
-      value: stats?.totalPayrollBudget
-        ? `$${Math.round(stats.totalPayrollBudget).toLocaleString()}`
-        : '$0',
-      change: `Calculated across ${stats?.countriesCount || 8} currencies`,
+      title: 'Monthly Compensation',
+      value: stats?.monthlyPayroll
+        ? formatINR(stats.monthlyPayroll)
+        : stats?.totalPayrollBudget
+        ? formatINR(stats.totalPayrollBudget * 0.085)
+        : formatINR(0),
+      change: 'Gross compensation calculation',
       icon: Banknote,
       color: 'text-emerald-500',
       bgColor: 'bg-emerald-500/10'
     },
     {
-      title: 'Average Base Salary',
-      value: stats?.averageBaseSalary
-        ? `$${Math.round(stats.averageBaseSalary).toLocaleString()}`
-        : '$0',
-      change: 'Calculated from live salary records',
-      icon: TrendingUp,
+      title: 'Net Salary Payable',
+      value: stats?.netSalaryPayable
+        ? formatINR(stats.netSalaryPayable)
+        : formatINR(0),
+      change: 'After taxes & statutory withholdings',
+      icon: Wallet,
       color: 'text-sky-500',
       bgColor: 'bg-sky-500/10'
     },
     {
-      title: 'Average Net Take-Home',
-      value: stats?.averageNetSalary
-        ? `$${Math.round(stats.averageNetSalary).toLocaleString()}`
-        : stats?.averageBaseSalary
-        ? `$${Math.round(stats.averageBaseSalary * 0.94).toLocaleString()}`
-        : '$0',
-      change: 'Calculated after bonuses & deductions',
-      icon: Wallet,
+      title: 'Total Deductions',
+      value: stats?.totalDeductions
+        ? formatINR(stats.totalDeductions)
+        : formatINR(0),
+      change: 'EPF, Taxes, Health & LOP',
+      icon: ShieldAlert,
+      color: 'text-rose-500',
+      bgColor: 'bg-rose-500/10'
+    },
+    {
+      title: 'Active Salary Records',
+      value: (stats?.activeEmployees || stats?.totalEmployees || 10000).toLocaleString(),
+      change: 'Verified compensation plans',
+      icon: Clock,
       color: 'text-amber-500',
       bgColor: 'bg-amber-500/10'
+    },
+    {
+      title: 'Paid Salaries',
+      value: stats?.paidSalaries
+        ? formatINR(stats.paidSalaries)
+        : formatINR(0),
+      change: 'Disbursed to employee accounts',
+      icon: CreditCard,
+      color: 'text-emerald-500',
+      bgColor: 'bg-emerald-500/10'
     }
   ];
 
@@ -172,26 +199,26 @@ export const Dashboard: React.FC = () => {
         </div>
       </div>
 
-      {/* KPI Stats Grid */}
-      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3.5">
+      {/* 6 Summary KPI Cards Grid */}
+      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-6 gap-3">
         {kpiCards.map((kpi, idx) => {
           const Icon = kpi.icon;
           return (
             <div
               key={idx}
-              className="p-4 rounded-xl bg-card border border-border shadow-2xs flex flex-col justify-between transition hover:shadow-xs"
+              className="p-3.5 rounded-xl bg-card border border-border shadow-2xs flex flex-col justify-between transition hover:shadow-xs"
             >
               <div className="flex items-center justify-between">
-                <span className="text-xs font-medium text-muted">{kpi.title}</span>
-                <div className={`p-2 rounded-lg ${kpi.bgColor} ${kpi.color}`}>
-                  <Icon className="w-4 h-4" />
+                <span className="text-[11px] font-semibold text-muted leading-tight">{kpi.title}</span>
+                <div className={`p-1.5 rounded-lg ${kpi.bgColor} ${kpi.color}`}>
+                  <Icon className="w-3.5 h-3.5" />
                 </div>
               </div>
-              <div className="mt-2.5">
-                <h3 className="text-xl font-bold tracking-tight text-foreground font-mono">{kpi.value}</h3>
-                <p className="text-[11px] text-muted mt-0.5 flex items-center gap-1">
-                  <ArrowUpRight className="w-3 h-3 text-emerald-500" />
-                  {kpi.change}
+              <div className="mt-2">
+                <h3 className="text-lg font-bold tracking-tight text-foreground font-mono">{kpi.value}</h3>
+                <p className="text-[10px] text-muted mt-0.5 flex items-center gap-1 truncate">
+                  <ArrowUpRight className="w-3 h-3 text-emerald-500 shrink-0" />
+                  <span className="truncate">{kpi.change}</span>
                 </p>
               </div>
             </div>

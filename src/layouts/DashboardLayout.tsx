@@ -17,7 +17,8 @@ import {
   Menu,
   X,
   ShieldCheck,
-  ChevronRight
+  ChevronRight,
+  ChevronDown
 } from 'lucide-react';
 
 export const DashboardLayout: React.FC = () => {
@@ -28,6 +29,7 @@ export const DashboardLayout: React.FC = () => {
   const { currentUser } = useAppSelector((state) => state.user);
 
   const [isMobileOpen, setIsMobileOpen] = useState(false);
+  const [isSalaryMenuOpen, setIsSalaryMenuOpen] = useState(true);
   const [currentDateTime, setCurrentDateTime] = useState('');
 
   // Live Time & Date matching screenshot style
@@ -112,7 +114,68 @@ export const DashboardLayout: React.FC = () => {
         <nav className="flex-1 px-3 py-5 space-y-1.5 overflow-y-auto">
           {navItems.map((item) => {
             const Icon = item.icon;
-            const isActive = location.pathname === item.path;
+            const isSalaries = item.path === '/salaries';
+            const isActive = isSalaries ? location.pathname.startsWith('/salaries') : location.pathname === item.path;
+
+            if (isSalaries) {
+              const currentTab = new URLSearchParams(location.search).get('tab') || 'employee-salary';
+              const salarySubItems = [
+                { name: 'Employee Salary', tab: 'employee-salary' },
+                { name: 'Salary Structure', tab: 'salary-structure' },
+                { name: 'Salary Deductions', tab: 'salary-deductions' },
+                { name: 'Increments & Bonuses', tab: 'increments-bonuses' },
+                { name: 'Salary Slips & History', tab: 'salary-slips' }
+              ];
+
+              return (
+                <div key={item.path} className="space-y-1">
+                  <button
+                    type="button"
+                    onClick={() => {
+                      if (!location.pathname.startsWith('/salaries')) {
+                        navigate('/salaries?tab=employee-salary');
+                        setIsSalaryMenuOpen(true);
+                      } else {
+                        setIsSalaryMenuOpen((prev) => !prev);
+                      }
+                    }}
+                    className={`w-full flex items-center justify-between px-3.5 py-2.5 rounded-xl text-sm font-medium transition-all cursor-pointer ${
+                      isActive
+                        ? 'bg-primary text-white shadow-md shadow-primary/30 font-semibold'
+                        : 'text-muted hover:text-foreground hover:bg-background'
+                    }`}
+                  >
+                    <div className="flex items-center gap-3">
+                      <Icon className={`w-4 h-4 ${isActive ? 'text-white' : 'text-muted'}`} />
+                      <span>{item.name}</span>
+                    </div>
+                    <ChevronDown className={`w-3.5 h-3.5 opacity-80 transition-transform duration-200 ${isSalaryMenuOpen && isActive ? 'rotate-180' : ''}`} />
+                  </button>
+
+                  {/* Collapsible Submenu: Toggles on click */}
+                  {isActive && isSalaryMenuOpen && (
+                    <div className="pl-6 pr-2 py-1 space-y-1 border-l-2 border-primary/20 ml-5 my-1 animate-in fade-in slide-in-from-top-1 duration-150">
+                      {salarySubItems.map((sub) => {
+                        const isSubActive = currentTab === sub.tab || (sub.tab === 'salary-deductions' && currentTab === 'deductions-lop');
+                        return (
+                          <NavLink
+                            key={sub.tab}
+                            to={`/salaries?tab=${sub.tab}`}
+                            className={`block px-3 py-1.5 rounded-lg text-xs font-medium transition-colors ${
+                              isSubActive
+                                ? 'bg-primary/10 text-primary font-semibold'
+                                : 'text-muted hover:text-foreground hover:bg-background/60'
+                            }`}
+                          >
+                            {sub.name}
+                          </NavLink>
+                        );
+                      })}
+                    </div>
+                  )}
+                </div>
+              );
+            }
 
             return (
               <NavLink

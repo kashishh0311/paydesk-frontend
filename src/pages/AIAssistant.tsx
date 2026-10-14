@@ -48,13 +48,14 @@ export const AIAssistant: React.FC = () => {
       } else {
         throw new Error('No response returned from the server.');
       }
-    } catch {
-      showErrorToast('Failed to connect to AI assistant service.');
+    } catch (err: any) {
+      const errorMsg = err?.message || 'AI service temporarily unavailable. Please try again later.';
+      showErrorToast(errorMsg);
       setMessages((prev) => [
         ...prev,
         {
           role: 'assistant',
-          content: 'Unable to communicate with the compensation inference service. Please verify your connection or try again shortly.'
+          content: errorMsg
         }
       ]);
     } finally {

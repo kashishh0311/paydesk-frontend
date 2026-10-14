@@ -21,6 +21,10 @@ export const userService = {
       throw new Error(res.message || 'Login failed.');
     }
 
+    if (res.data.token) {
+      localStorage.setItem('paydesk_token', res.data.token);
+    }
+
     return res.data.user;
   },
 
@@ -36,8 +40,12 @@ export const userService = {
   },
 
   async logout(): Promise<void> {
-    await apiRequest('/auth/logout', {
-      method: 'POST',
-    });
+    try {
+      await apiRequest('/auth/logout', {
+        method: 'POST',
+      });
+    } finally {
+      localStorage.removeItem('paydesk_token');
+    }
   },
 };

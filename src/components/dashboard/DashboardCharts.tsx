@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { Card } from '../common/Card';
-import { TrendingUp, BarChart3, Globe, DollarSign } from 'lucide-react';
+import { TrendingUp, Globe } from 'lucide-react';
 
 export interface MonthlyTrendItem {
   period: string;
@@ -27,6 +27,8 @@ export interface CountryBreakdownItem {
   totalSpend: number;
 }
 
+import { formatINR } from '../../utils/currency';
+
 // -------------------------------------------------------------
 // Helper for SVG smooth Bezier path
 // -------------------------------------------------------------
@@ -52,10 +54,7 @@ function createSmoothPath(points: { x: number; y: number }[]): string {
 }
 
 function formatCurrencyCompact(val: number): string {
-  if (val >= 1_000_000_000) return `$${(val / 1_000_000_000).toFixed(1)}B`;
-  if (val >= 1_000_000) return `$${(val / 1_000_000).toFixed(1)}M`;
-  if (val >= 1_000) return `$${(val / 1_000).toFixed(0)}k`;
-  return `$${val.toLocaleString()}`;
+  return formatINR(val, { compact: true });
 }
 
 // -------------------------------------------------------------
@@ -66,9 +65,9 @@ export const PayrollTrendChart: React.FC<{ data: MonthlyTrendItem[] }> = ({ data
 
   if (!data || data.length === 0) {
     return (
-      <Card title="Monthly Payroll Trend" subtitle="Live compensation progression">
+      <Card title="Monthly Compensation Trend" subtitle="Live salary expenditure progression">
         <div className="h-52 flex items-center justify-center text-muted text-xs">
-          No historical payroll records available
+          No historical compensation records available
         </div>
       </Card>
     );
@@ -129,13 +128,13 @@ export const PayrollTrendChart: React.FC<{ data: MonthlyTrendItem[] }> = ({ data
               {hoveredIndex !== null ? activePoint.item.label : 'Current Run-Rate'}:
             </span>{' '}
             <strong className="text-foreground font-semibold">
-              ${Math.round(activePoint.item.spend).toLocaleString()}
+              {formatINR(activePoint.item.spend)}
             </strong>
           </div>
           <div className="text-muted">
             <span>Avg Base: </span>
             <strong className="text-foreground font-medium">
-              ${Math.round(activePoint.item.avgBase).toLocaleString()}
+              {formatINR(activePoint.item.avgBase)}
             </strong>
           </div>
         </div>
@@ -281,7 +280,7 @@ export const DepartmentBarChart: React.FC<{ data: DeptBreakdownItem[] }> = ({ da
                     Avg: <strong className="text-foreground">{dept.avg}</strong>
                   </span>
                   <span className="font-semibold text-foreground font-mono text-xs">
-                    ${dept.totalSpend.toLocaleString()}
+                    {formatINR(dept.totalSpend)}
                   </span>
                 </div>
               </div>
@@ -360,3 +359,4 @@ export const CurrencyDistributionChart: React.FC<{ data: CountryBreakdownItem[] 
     </Card>
   );
 };
+
