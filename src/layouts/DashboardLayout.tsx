@@ -154,14 +154,14 @@ export const DashboardLayout: React.FC = () => {
 
                   {/* Collapsible Submenu: Toggles on click */}
                   {isActive && isSalaryMenuOpen && (
-                    <div className="pl-6 pr-2 py-1 space-y-1 border-l-2 border-primary/20 ml-5 my-1 animate-in fade-in slide-in-from-top-1 duration-150">
+                    <div className="pl-5 pr-2 pt-2.5 pb-2 space-y-2 border-l-2 border-primary/20 ml-5 my-2 animate-in fade-in slide-in-from-top-1 duration-150">
                       {salarySubItems.map((sub) => {
                         const isSubActive = currentTab === sub.tab || (sub.tab === 'salary-deductions' && currentTab === 'deductions-lop');
                         return (
                           <NavLink
                             key={sub.tab}
                             to={`/salaries?tab=${sub.tab}`}
-                            className={`block px-3 py-1.5 rounded-lg text-xs font-medium transition-colors ${
+                            className={`block px-3 py-2 rounded-lg text-xs font-medium transition-colors ${
                               isSubActive
                                 ? 'bg-primary/10 text-primary font-semibold'
                                 : 'text-muted hover:text-foreground hover:bg-background/60'

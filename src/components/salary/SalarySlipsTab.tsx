@@ -43,6 +43,8 @@ interface EmployeeHistoryData {
     basic_salary: number;
     allowances: number;
     bonus_amount?: number;
+    lop_deduction?: number;
+    unpaid_leave_days?: number;
     gross_salary: number;
     total_deductions: number;
     net_salary: number;
@@ -77,11 +79,8 @@ export const SalarySlipsTab: React.FC = () => {
   const handleDownloadSlip = async (run: any) => {
     setDownloadingId(run.id);
     try {
-      const emp = run.employee || historyData?.employee;
-      const empCode = emp?.employee_code || `EMP-${emp?.id || run.id}`;
       const month = run.month_name || 'October';
       const year = run.payroll_year || 2026;
-      const filename = `Salary_Slip_${empCode}_${month}_${year}.html`;
 
       const token = typeof window !== 'undefined'
         ? (localStorage.getItem('paydesk_token') || localStorage.getItem('token') || '')
@@ -95,22 +94,24 @@ export const SalarySlipsTab: React.FC = () => {
       });
 
       if (!response.ok) {
-        throw new Error('Failed to download salary slip from server');
+        throw new Error('Failed to retrieve salary slip for printing/saving as PDF');
       }
 
-      const blob = await response.blob();
-      const url = window.URL.createObjectURL(blob);
-      const link = document.createElement('a');
-      link.href = url;
-      link.download = filename;
-      document.body.appendChild(link);
-      link.click();
-      document.body.removeChild(link);
-      window.URL.revokeObjectURL(url);
+      const html = await response.text();
+      const printWin = window.open('', '_blank');
+      if (printWin) {
+        printWin.document.open();
+        printWin.document.write(html);
+        printWin.document.close();
+      } else {
+        const blob = new Blob([html], { type: 'text/html' });
+        const url = window.URL.createObjectURL(blob);
+        window.open(url, '_blank');
+      }
 
-      showSuccessToast(`Salary slip downloaded for ${month} ${year}`);
+      showSuccessToast(`Opening Save as PDF dialog for ${month} ${year}`);
     } catch (err: any) {
-      showErrorToast(err.message || 'Error downloading salary slip.');
+      showErrorToast(err.message || 'Error opening salary slip PDF.');
     } finally {
       setDownloadingId(null);
     }
@@ -513,6 +514,16 @@ export const SalarySlipsTab: React.FC = () => {
                       <div className="flex justify-between">
                         <span className="text-muted">Statutory Deductions:</span>
                         <strong className="font-mono text-rose-500">-{formatINR(previewSlip.total_deductions)}</strong>
+                      </div>
+                    )}
+                    {/* Explicit Loss of Pay (LOP) display if not already in deductions list */}
+                    {Number(previewSlip.lop_deduction) > 0 && !previewSlip.deductions?.some((d: any) => d.deduction_type?.toLowerCase().includes('loss of pay')) && (
+                      <div className="flex justify-between">
+                        <div>
+                          <span className="text-foreground font-semibold block">Loss of Pay (LOP)</span>
+                          <span className="text-[10px] text-muted">{previewSlip.unpaid_leave_days || 1} day(s) unpaid leave deduction</span>
+                        </div>
+                        <strong className="font-mono text-rose-500">-{formatINR(previewSlip.lop_deduction)}</strong>
                       </div>
                     )}
                     <div className="flex justify-between border-t border-border pt-2 font-bold">
