@@ -118,7 +118,7 @@ export const Salaries: React.FC = () => {
       search,
       department
     });
-    const ext = format === 'xlsx' ? 'xls' : format;
+    const ext = format === 'xlsx' ? 'xlsx' : format;
     downloadExport(`/export/salaries?${query.toString()}`, `paydesk_salaries_${selectedMonth}_${new Date().toISOString().split('T')[0]}.${ext}`);
   };
 
@@ -227,7 +227,7 @@ export const Salaries: React.FC = () => {
   return (
     <div className="space-y-5 w-full">
       {/* Header */}
-      <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
+      <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 ">
         <div>
           <h1 className="text-xl font-bold tracking-tight text-foreground">Salary Management</h1>
           <p className="text-xs text-muted mt-0.5">
@@ -259,7 +259,7 @@ export const Salaries: React.FC = () => {
                     className="w-full flex items-center gap-2 px-3 py-2 rounded-lg text-xs text-foreground hover:bg-background transition text-left cursor-pointer"
                   >
                     <FileSpreadsheet className="w-4 h-4 text-sky-500" />
-                    <span>Export as Excel (.xls)</span>
+                    <span>Export as Excel (.xlsx)</span>
                   </button>
                   <button
                     onClick={() => handleExport('pdf')}
@@ -276,7 +276,7 @@ export const Salaries: React.FC = () => {
       </div>
 
       {/* Sub-Navigation Tab Bar */}
-      <div className="flex items-center gap-1.5 overflow-x-auto pb-1 border-b border-border">
+      <div className="flex items-center gap-1.5 overflow-x-auto pb-[14px] border-b border-border ">
         {tabs.map((t) => {
           const Icon = t.icon;
           const isActive = currentTab === t.id;
@@ -643,9 +643,6 @@ export const Salaries: React.FC = () => {
                     <div className="p-3 rounded-xl bg-background border border-border space-y-1">
                       <div className="flex items-center justify-between">
                         <span className="text-xs font-semibold text-foreground">Casual Leave (CL)</span>
-                        <span className="text-[10px] font-medium px-2 py-0.5 rounded-md bg-muted/15 text-muted border border-border">
-                          Paid Leave
-                        </span>
                       </div>
                       <div className="text-xs text-muted">
                         Taken: <strong className="text-foreground">1 Day</strong> (Balance: 11)
@@ -659,9 +656,6 @@ export const Salaries: React.FC = () => {
                     <div className="p-3 rounded-xl bg-background border border-border space-y-1">
                       <div className="flex items-center justify-between">
                         <span className="text-xs font-semibold text-foreground">Sick Leave (SL)</span>
-                        <span className="text-[10px] font-medium px-2 py-0.5 rounded-md bg-muted/15 text-muted border border-border">
-                          Paid Leave
-                        </span>
                       </div>
                       <div className="text-xs text-muted">
                         Taken: <strong className="text-foreground">{unpaidDays > 0 ? 0 : 1} Day</strong> (Balance: 10)
@@ -675,9 +669,6 @@ export const Salaries: React.FC = () => {
                     <div className="p-3 rounded-xl bg-background border border-border space-y-1">
                       <div className="flex items-center justify-between">
                         <span className="text-xs font-semibold text-foreground">Loss of Pay (LOP)</span>
-                        <span className="text-[10px] font-medium px-2 py-0.5 rounded-md bg-muted/15 text-muted border border-border">
-                          {unpaidDays > 0 ? 'Deducted' : 'None'}
-                        </span>
                       </div>
                       <div className="text-xs text-muted">
                         Taken: <strong className="text-foreground">{unpaidDays} Unpaid Day(s)</strong>

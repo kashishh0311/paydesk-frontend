@@ -204,7 +204,7 @@ export const Employees: React.FC = () => {
       department,
       country
     });
-    const ext = format === 'xlsx' ? 'xls' : format;
+    const ext = format === 'xlsx' ? 'xlsx' : format;
     downloadExport(`/export/employees?${query.toString()}`, `paydesk_employees_${new Date().toISOString().split('T')[0]}.${ext}`);
   };
 
@@ -245,7 +245,7 @@ export const Employees: React.FC = () => {
                   className="w-full flex items-center gap-2 px-3 py-2 rounded-lg text-xs text-foreground hover:bg-background transition text-left"
                 >
                   <FileSpreadsheet className="w-4 h-4 text-sky-500" />
-                  <span>Export as Excel (.xls)</span>
+                  <span>Export as Excel (.xlsx)</span>
                 </button>
                 <button
                   onClick={() => handleExport('pdf')}

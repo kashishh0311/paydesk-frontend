@@ -7,7 +7,7 @@ PayDesk is a modern, enterprise-grade HRMS, compensation management, and payroll
 ## Key Features
 
 1. **Salary Management Hub (`/salaries`)**:
-   - **Employee Salary**: Real-time month filtering (defaulting to current month), search, department filtering, Annual & Monthly Income, Deductions, Net Take-Home, View Details modal with full leave quotas, and **Export dropdown** (CSV, Excel `.xls`, Print/PDF).
+   - **Employee Salary**: Real-time month filtering (defaulting to current month), search, department filtering, Annual & Monthly Income, Deductions, Net Take-Home, View Details modal with full leave quotas, and **Export dropdown** (CSV, Excel `.xlsx`, Print/PDF).
    - **Salary Structure**: Component breakdown (Basic, 40% HRA, 20% Special, 12% EPF, PT ₹200, Health ₹120, LOP), add/edit structure form, leave balances.
    - **Salary Deductions**: Itemized deduction registry, detail popup with regulatory sources, automatic leave deduction synchronization.
    - **Increments & Bonuses**: Monthly Increment ("This Month Only Increment") vs Annual Base revisions, synchronized audit trail.

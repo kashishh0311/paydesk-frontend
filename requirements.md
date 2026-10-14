@@ -28,7 +28,7 @@ Organized as a unified 5-tab workspace:
   - Net Take-Home (`₹XX,XXX.00`)
   - Actions: **View Details** and **Revise**
 - **View Details Modal**: Displays annual base, active bonus, statutory deductions, net take-home, verified deductions (EPF, PT, Health), and leave quota details (Casual Leave, Sick Leave, Loss of Pay per-day rate and days taken).
-- **Export Action**: Direct export dropdown supporting **Export as CSV**, **Export as Excel (.xls)**, and **Print / Save as PDF** via backend streaming.
+- **Export Action**: Direct export dropdown supporting **Export as CSV**, **Export as Excel (.xlsx)**, and **Print / Save as PDF** via backend streaming.
 
 ### 2.2 Tab 2: Salary Structure Management
 - **Search & Select**: Lookup any employee profile by name or code.
