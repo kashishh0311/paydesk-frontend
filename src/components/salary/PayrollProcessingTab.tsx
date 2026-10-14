@@ -2,25 +2,19 @@ import React, { useState, useEffect, useCallback, useRef } from 'react';
 import { Card } from '../common/Card';
 import { Button } from '../common/Button';
 import { apiRequest } from '../../services/api';
-import { showSuccessToast, showErrorToast } from '../../utils/toast';
 import { useOnClickOutside } from '../../hooks/useOnClickOutside';
 import { formatINR } from '../../utils/currency';
 import {
   Calendar,
-  Clock,
   Calculator,
   ShieldCheck,
   CheckCircle2,
   CreditCard,
-  AlertCircle,
-  FileText,
   Loader2,
-  Search,
-  Filter,
-  ArrowRight,
   Eye,
-  Lock
+  ArrowRight,
 } from 'lucide-react';
+import { showErrorToast, showSuccessToast } from '../../utils/toast';
 
 interface PayrollRecordItem {
   id: number;
@@ -71,9 +65,7 @@ export const PayrollProcessingTab: React.FC = () => {
 
   // Filters
   const [statusFilter, setStatusFilter] = useState('all');
-  const [search, setSearch] = useState('');
   const [page, setPage] = useState(1);
-  const [totalCount, setTotalCount] = useState(0);
 
   // Modals
   const [isPaymentModalOpen, setIsPaymentModalOpen] = useState(false);
@@ -93,8 +85,7 @@ export const PayrollProcessingTab: React.FC = () => {
         payroll_year: selectedYear,
         page: String(page),
         limit: '15',
-        status: statusFilter,
-        search
+        status: statusFilter
       });
 
       const [listRes, summaryRes] = await Promise.all([
@@ -108,7 +99,6 @@ export const PayrollProcessingTab: React.FC = () => {
 
       if (listRes.data) {
         setRecords(listRes.data.rows || []);
-        setTotalCount(listRes.data.count || 0);
       }
       if (summaryRes.data) {
         setSummary(summaryRes.data);
@@ -118,7 +108,7 @@ export const PayrollProcessingTab: React.FC = () => {
     } finally {
       setLoading(false);
     }
-  }, [selectedMonth, selectedYear, page, statusFilter, search]);
+  }, [selectedMonth, selectedYear, page, statusFilter]);
 
   useEffect(() => {
     fetchPayrollData();
