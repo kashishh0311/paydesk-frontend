@@ -1,75 +1,95 @@
-# React + TypeScript + Vite
+# PayDesk HRMS — Frontend Web Application
 
-This template provides a minimal setup to get React working in Vite with HMR and some ESLint rules.
+PayDesk is a modern, enterprise-grade HRMS, compensation management, and payroll processing frontend built with **React 18**, **TypeScript**, **Vite**, and **Tailwind CSS**.
 
-Currently, two official plugins are available:
+---
 
-- [@vitejs/plugin-react](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react) uses [Oxc](https://oxc.rs)
-- [@vitejs/plugin-react-swc](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react-swc) uses [SWC](https://swc.rs/)
+## Key Features
 
-## React Compiler
+1. **Salary Management Hub (`/salaries`)**:
+   - **Employee Salary**: Real-time month filtering (defaulting to current month), search, department filtering, Annual & Monthly Income, Deductions, Net Take-Home, View Details modal with full leave quotas, and **Export dropdown** (CSV, Excel `.xls`, Print/PDF).
+   - **Salary Structure**: Component breakdown (Basic, 40% HRA, 20% Special, 12% EPF, PT ₹200, Health ₹120, LOP), add/edit structure form, leave balances.
+   - **Salary Deductions**: Itemized deduction registry, detail popup with regulatory sources, automatic leave deduction synchronization.
+   - **Increments & Bonuses**: Monthly Increment ("This Month Only Increment") vs Annual Base revisions, synchronized audit trail.
+   - **Salary Slips & History**: Interactive payslip preview modal, direct HTML salary slip download, synchronized compensation revisions timeline matching calculations exactly.
 
-The React Compiler is not enabled on this template because of its impact on dev & build performances. To add it, see [this documentation](https://react.dev/learn/react-compiler/installation).
+2. **Employee Directory (`/employees`)**:
+   - High-performance directory with search, department, and country filters.
+   - Onboard employee modal with starting salary configuration.
+   - Safe employee record deletion with cascading backend cleanup.
+   - Data export in CSV, Excel, and PDF.
 
-## Expanding the ESLint configuration
+3. **Dashboard & Analytics (`/dashboard`)**:
+   - Live KPI cards: Total Employees, Monthly Payroll, Net Salary Payable, Total Deductions, Pending Approvals, Paid Salaries.
+   - Monthly payroll disbursement progression chart.
+   - Payroll status distribution breakdown.
 
-If you are developing a production application, we recommend updating the configuration to enable type-aware lint rules:
+4. **Compliance Audit Trail (`/audit-logs`)**:
+   - Complete chronological logs of compensation adjustments, employee additions, and profile deletions with previous and new values.
 
-```js
-export default defineConfig([
-  globalIgnores(['dist']),
-  {
-    files: ['**/*.{ts,tsx}'],
-    extends: [
-      // Other configs...
+5. **AI Salary Assistant (`/ai-assistant`)**:
+   - Interactive chat assistant answering natural-language compensation queries using real backend calculations.
+   - User-friendly error messaging for quota, network, and data availability states.
 
-      // Remove tseslint.configs.recommended and replace with this
-      tseslint.configs.recommendedTypeChecked,
-      // Alternatively, use this for stricter rules
-      tseslint.configs.strictTypeChecked,
-      // Optionally, add this for stylistic rules
-      tseslint.configs.stylisticTypeChecked,
+---
 
-      // Other configs...
-    ],
-    languageOptions: {
-      parserOptions: {
-        project: ['./tsconfig.node.json', './tsconfig.app.json'],
-        tsconfigRootDir: import.meta.dirname,
-      },
-      // other options...
-    },
-  },
-])
+## Technology Stack
 
-```
+| Layer | Technology |
+| :--- | :--- |
+| **Framework** | React 18 with TypeScript |
+| **Build Tool** | Vite |
+| **Styling** | Tailwind CSS + Custom Design System |
+| **Routing** | React Router v6 |
+| **Icons** | Lucide React |
+| **Charts** | Recharts |
+| **Notifications** | Custom Toast System |
+| **Currency** | Indian Rupee (`formatINR`, `₹`) |
 
-You can also install [eslint-plugin-react-x](https://npmx.dev/package/eslint-plugin-react-x) and [eslint-plugin-react-dom](https://npmx.dev/package/eslint-plugin-react-dom) for React-specific lint rules:
+---
 
-```js
-// eslint.config.js
-import reactX from 'eslint-plugin-react-x'
-import reactDom from 'eslint-plugin-react-dom'
-
-export default defineConfig([
-  globalIgnores(['dist']),
-  {
-    files: ['**/*.{ts,tsx}'],
-    extends: [
-      // Other configs...
-      // Enable lint rules for React
-      reactX.configs['recommended-typescript'],
-      // Enable lint rules for React DOM
-      reactDom.configs.recommended,
-    ],
-    languageOptions: {
-      parserOptions: {
-        project: ['./tsconfig.node.json', './tsconfig.app.json'],
-        tsconfigRootDir: import.meta.dirname,
-      },
-      // other options...
-    },
-  },
-])
+## Directory Structure
 
 ```
+paydesk-frontend/
+├── src/
+│   ├── components/
+│   │   ├── common/         # Button, Card, Input, Select, Modal, Toast
+│   │   ├── salary/         # SalaryStructureTab, DeductionsLopTab, IncrementsBonusesTab, SalarySlipsTab
+│   │   └── dashboard/      # Stat cards, trend charts
+│   ├── hooks/              # useDebounce, useOnClickOutside
+│   ├── layouts/            # DashboardLayout (sidebar, header, user menu)
+│   ├── pages/              # Dashboard, Employees, Salaries, AuditLogs, AIAssistant, Login
+│   ├── services/           # api.ts (cross-origin auth and fetch wrapper)
+│   ├── utils/              # currency.ts (formatINR), download.ts (stream exports)
+│   ├── App.tsx             # Route definitions & authentication guards
+│   └── main.tsx            # Application entry point
+├── requirements.md         # Detailed frontend requirements
+└── README.md               # Frontend documentation
+```
+
+---
+
+## Running Locally
+
+1. **Install Dependencies**:
+   ```bash
+   cd paydesk-frontend
+   npm install
+   ```
+
+2. **Environment Variables (`.env`)**:
+   ```env
+   VITE_API_URL=http://localhost:5000/api/v1
+   ```
+
+3. **Start Development Server**:
+   ```bash
+   npm run dev
+   ```
+   The application will be accessible at `http://localhost:5173`.
+
+4. **Build for Production**:
+   ```bash
+   npm run build
+   ```
