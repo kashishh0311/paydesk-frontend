@@ -1,5 +1,4 @@
 import React, { useState, useRef, useEffect } from 'react';
-import { Card } from '../components/common/Card';
 import { Button } from '../components/common/Button';
 import { Sparkles, Send, Bot, User as UserIcon } from 'lucide-react';
 import { apiRequest } from '../services/api';
@@ -74,13 +73,12 @@ export const AIAssistant: React.FC = () => {
 
   const renderFormattedMessage = (content: string, isUser: boolean) => {
     const lines = content.split('\n');
-    return lines.map((line, lIdx) => {
-      const trimmed = line.trim();
-      const isBullet = trimmed.startsWith('- ') || trimmed.startsWith('• ');
-      const rawText = isBullet ? trimmed.replace(/^[-•]\s*/, '') : line;
+    const elements: React.ReactNode[] = [];
+    let i = 0;
 
-      const parts = rawText.split(/(\*\*.*?\*\*)/g);
-      const renderedParts = parts.map((part, pIdx) => {
+    const renderInline = (text: string) => {
+      const parts = text.split(/(\*\*.*?\*\*|\*.*?\*|`.*?`)/g);
+      return parts.map((part, pIdx) => {
         if (part.startsWith('**') && part.endsWith('**')) {
           return (
             <strong
@@ -91,32 +89,131 @@ export const AIAssistant: React.FC = () => {
             </strong>
           );
         }
+        if (part.startsWith('*') && part.endsWith('*')) {
+          return <em key={pIdx} className="italic text-muted">{part.slice(1, -1)}</em>;
+        }
+        if (part.startsWith('`') && part.endsWith('`')) {
+          return (
+            <code key={pIdx} className="px-1.5 py-0.5 rounded bg-muted/20 font-mono text-xs text-primary">
+              {part.slice(1, -1)}
+            </code>
+          );
+        }
         return <span key={pIdx}>{part}</span>;
       });
+    };
 
-      if (isBullet) {
-        return (
-          <div key={lIdx} className="flex items-start gap-2.5 my-1.5 pl-1">
-            <span
-              className={`w-1.5 h-1.5 rounded-full mt-2 shrink-0 ${
-                isUser ? 'bg-white' : 'bg-primary'
-              }`}
-            />
-            <div className="flex-1 leading-relaxed">{renderedParts}</div>
+    while (i < lines.length) {
+      const line = lines[i];
+      const trimmed = line.trim();
+
+      // Check for Markdown Table
+      if (trimmed.startsWith('|') && trimmed.endsWith('|') && i + 1 < lines.length && lines[i + 1].trim().startsWith('|') && lines[i + 1].includes('---')) {
+        const tableLines: string[] = [];
+        while (i < lines.length && lines[i].trim().startsWith('|') && lines[i].trim().endsWith('|')) {
+          tableLines.push(lines[i].trim());
+          i++;
+        }
+
+        if (tableLines.length >= 2) {
+          const headerCols = tableLines[0].slice(1, -1).split('|').map(c => c.trim());
+          const bodyRows = tableLines.slice(2).map(r => r.slice(1, -1).split('|').map(c => c.trim()));
+
+          elements.push(
+            <div key={`table-${i}`} className="my-3 overflow-x-auto rounded-lg border border-border">
+              <table className="w-full text-xs text-left border-collapse">
+                <thead className="bg-muted/15 border-b border-border text-foreground font-semibold">
+                  <tr>
+                    {headerCols.map((col, cIdx) => (
+                      <th key={cIdx} className="px-3 py-2 border-r border-border last:border-r-0">
+                        {renderInline(col)}
+                      </th>
+                    ))}
+                  </tr>
+                </thead>
+                <tbody className="divide-y divide-border">
+                  {bodyRows.map((row, rIdx) => (
+                    <tr key={rIdx} className="hover:bg-muted/5 transition">
+                      {row.map((cell, cIdx) => (
+                        <td key={cIdx} className="px-3 py-2 border-r border-border last:border-r-0 text-foreground">
+                          {renderInline(cell)}
+                        </td>
+                      ))}
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
+          );
+          continue;
+        }
+      }
+
+      // Blockquote
+      if (trimmed.startsWith('>')) {
+        const quoteText = trimmed.replace(/^>\s*/, '');
+        elements.push(
+          <div key={`quote-${i}`} className="my-2 pl-3 border-l-2 border-primary/40 text-xs italic text-muted">
+            {renderInline(quoteText)}
           </div>
         );
+        i++;
+        continue;
       }
 
+      // Bullet points
+      const isBullet = trimmed.startsWith('- ') || trimmed.startsWith('• ') || trimmed.startsWith('* ');
+      if (isBullet) {
+        const bulletText = trimmed.replace(/^[-•*]\s*/, '');
+        elements.push(
+          <div key={`bullet-${i}`} className="flex items-start gap-2.5 my-1 pl-1 text-sm">
+            <span
+              className={`w-1.5 h-1.5 rounded-full mt-2 shrink-0 ${isUser ? 'bg-white' : 'bg-primary'}`}
+            />
+            <div className="flex-1 leading-relaxed">{renderInline(bulletText)}</div>
+          </div>
+        );
+        i++;
+        continue;
+      }
+
+      // Empty line
       if (trimmed === '') {
-        return <div key={lIdx} className="h-2.5" />;
+        elements.push(<div key={`empty-${i}`} className="h-2" />);
+        i++;
+        continue;
       }
 
-      return (
-        <div key={lIdx} className="my-1 leading-relaxed">
-          {renderedParts}
+      // Headings
+      if (trimmed.startsWith('### ')) {
+        elements.push(
+          <h3 key={`h3-${i}`} className="text-sm font-bold text-foreground mt-3 mb-1">
+            {renderInline(trimmed.replace(/^###\s*/, ''))}
+          </h3>
+        );
+        i++;
+        continue;
+      }
+      if (trimmed.startsWith('## ')) {
+        elements.push(
+          <h2 key={`h2-${i}`} className="text-base font-bold text-foreground mt-3 mb-1">
+            {renderInline(trimmed.replace(/^##\s*/, ''))}
+          </h2>
+        );
+        i++;
+        continue;
+      }
+
+      // Regular line
+      elements.push(
+        <div key={`line-${i}`} className="my-0.5 leading-relaxed text-sm">
+          {renderInline(line)}
         </div>
       );
-    });
+      i++;
+    }
+
+    return elements;
   };
 
   return (
@@ -129,11 +226,11 @@ export const AIAssistant: React.FC = () => {
             AI Salary & Compensation Assistant
           </h1>
           <p className="text-xs sm:text-sm text-muted mt-0.5">
-            Inquire in natural language with verified data from our MySQL workforce database.
+            Ask questions in natural language about organizational payroll metrics, departmental headcounts, and workforce compensation.
           </p>
         </div>
         <span className="text-xs font-semibold px-3 py-1.5 rounded-lg bg-primary/10 text-primary border border-primary/20 self-start sm:self-auto shrink-0">
-          Powered by Groq LLM
+          AI Payroll Intelligence
         </span>
       </div>
 
@@ -147,9 +244,8 @@ export const AIAssistant: React.FC = () => {
           {messages.map((m, idx) => (
             <div
               key={idx}
-              className={`flex items-start gap-3.5 ${
-                m.role === 'user' ? 'justify-end' : 'justify-start'
-              }`}
+              className={`flex items-start gap-3.5 ${m.role === 'user' ? 'justify-end' : 'justify-start'
+                }`}
             >
               {m.role === 'assistant' && (
                 <div className="w-8 h-8 sm:w-9 sm:h-9 rounded-xl bg-primary text-white flex items-center justify-center shrink-0 shadow-xs mt-0.5">
@@ -157,11 +253,10 @@ export const AIAssistant: React.FC = () => {
                 </div>
               )}
               <div
-                className={`max-w-[85%] rounded-2xl p-3.5 sm:p-4 text-xs sm:text-sm shadow-2xs ${
-                  m.role === 'user'
-                    ? 'bg-primary text-white font-medium'
-                    : 'bg-background border border-border text-foreground'
-                }`}
+                className={`max-w-[85%] rounded-2xl p-3.5 sm:p-4 text-xs sm:text-sm shadow-2xs ${m.role === 'user'
+                  ? 'bg-primary text-white font-medium'
+                  : 'bg-background border border-border text-foreground'
+                  }`}
               >
                 {renderFormattedMessage(m.content, m.role === 'user')}
               </div>

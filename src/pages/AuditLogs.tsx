@@ -122,7 +122,7 @@ export const AuditLogs: React.FC = () => {
         <div>
           <h1 className="text-xl font-bold tracking-tight text-foreground">Compliance & Audit Trail</h1>
           <p className="text-xs text-muted mt-0.5">
-            Immutable log of all compensation modifications, revisions, and authorized actions stored in MySQL.
+            Immutable log of all compensation modifications, revisions, and authorized actions.
           </p>
         </div>
         <div className="flex items-center gap-2">

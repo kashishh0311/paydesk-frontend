@@ -364,7 +364,7 @@ export const Employees: React.FC = () => {
               {employees.length === 0 ? (
                 <tr>
                   <td colSpan={7} className="py-12 text-center text-sm text-muted">
-                    No employee records matching current criteria in MySQL database.
+                    No employee records matching current criteria.
                   </td>
                 </tr>
               ) : (
@@ -401,6 +401,7 @@ export const Employees: React.FC = () => {
                       </div>
                     </td>
                   </tr>
+                  
                 ))
               )}
             </tbody>
