@@ -351,7 +351,7 @@ export const Employees: React.FC = () => {
       {/* Data Table */}
       <Card>
         <div className="table-slider">
-          <table className={`w-full text-left text-sm min-w-[850px] transition-opacity ${loading ? 'opacity-60' : 'opacity-100'}`}>
+          <table className={`w-full text-left text-sm min-w-[680px] xl:min-w-0 transition-opacity ${loading ? 'opacity-60' : 'opacity-100'}`}>
             <thead className="bg-background text-muted border-b border-border uppercase tracking-wider text-xs">
               <tr>
                 <th className="py-3 px-3.5">Code</th>

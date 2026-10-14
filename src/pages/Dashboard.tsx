@@ -255,7 +255,7 @@ export const Dashboard: React.FC = () => {
           className="h-full flex flex-col"
         >
           <div className="table-slider max-h-[300px] overflow-y-auto custom-scrollbar">
-            <table className="w-full text-left text-sm min-w-[550px]">
+            <table className="w-full text-left text-sm min-w-[360px] md:min-w-0">
               <thead className="bg-background text-muted border-b border-border uppercase tracking-wider text-xs sticky top-0 z-10">
                 <tr>
                   <th className="py-2.5 px-3">Employee</th>
