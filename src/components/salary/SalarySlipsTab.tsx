@@ -42,6 +42,7 @@ interface EmployeeHistoryData {
     payroll_year: number;
     basic_salary: number;
     allowances: number;
+    bonus_amount?: number;
     gross_salary: number;
     total_deductions: number;
     net_salary: number;
@@ -312,6 +313,12 @@ export const SalarySlipsTab: React.FC = () => {
                         <span>Net Pay: <strong className="text-primary font-mono">{formatINR(run.net_salary)}</strong></span>
                         <span>•</span>
                         <span>Gross: <strong className="text-foreground font-mono">{formatINR(run.gross_salary)}</strong></span>
+                        {Number(run.bonus_amount) > 0 && (
+                          <>
+                            <span>•</span>
+                            <span className="text-emerald-600 dark:text-emerald-400 font-semibold font-mono">Bonus: +{formatINR(run.bonus_amount)}</span>
+                          </>
+                        )}
                       </div>
                     </div>
 
@@ -377,10 +384,16 @@ export const SalarySlipsTab: React.FC = () => {
                           </span>
                           <span className="text-[11px] font-mono text-muted">{s.effective_date}</span>
                         </div>
-                        <div className="grid grid-cols-1 sm:grid-cols-3 gap-2 pt-1 text-xs">
+                        <div className="grid grid-cols-2 sm:grid-cols-4 gap-2 pt-1 text-xs">
                           <div>
                             <span className="text-muted block text-[10px]">Monthly Base</span>
                             <strong className="text-foreground font-mono">{formatINR(monthlyBase)}/mo</strong>
+                          </div>
+                          <div>
+                            <span className="text-muted block text-[10px]">Performance Bonus</span>
+                            <strong className={`font-mono ${Number(s.bonuses) > 0 ? 'text-emerald-600 dark:text-emerald-400 font-bold' : 'text-muted'}`}>
+                              {Number(s.bonuses) > 0 ? `+${formatINR(Number(s.bonuses))}` : '₹0.00'}
+                            </strong>
                           </div>
                           <div>
                             <span className="text-muted block text-[10px]">Monthly Deductions</span>
@@ -471,6 +484,12 @@ export const SalarySlipsTab: React.FC = () => {
                       <span className="text-muted">Allowances:</span>
                       <strong className="font-mono text-foreground">{formatINR(previewSlip.allowances)}</strong>
                     </div>
+                    {Number(previewSlip.bonus_amount) > 0 && (
+                      <div className="flex justify-between">
+                        <span className="text-emerald-600 dark:text-emerald-400 font-medium">Performance Bonus:</span>
+                        <strong className="font-mono text-emerald-600 dark:text-emerald-400">+{formatINR(previewSlip.bonus_amount)}</strong>
+                      </div>
+                    )}
                     <div className="flex justify-between border-t border-border pt-2 font-bold">
                       <span className="text-foreground">Gross Earnings:</span>
                       <span className="font-mono text-primary">{formatINR(previewSlip.gross_salary)}</span>
