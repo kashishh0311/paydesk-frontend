@@ -228,7 +228,7 @@ export const Dashboard: React.FC = () => {
                 </div>
               </div>
               <div className="mt-2">
-                <h3 className="text-lg font-bold tracking-tight text-foreground font-mono">{kpi.value}</h3>
+                <h3 className="text-md font-bold tracking-tight text-foreground font-mono">{kpi.value}</h3>
                 <p className="text-[10px] text-muted mt-0.5 flex items-center gap-1 truncate">
                   <ArrowUpRight className="w-3 h-3 text-emerald-500 shrink-0" />
                   <span className="truncate">{kpi.change}</span>
