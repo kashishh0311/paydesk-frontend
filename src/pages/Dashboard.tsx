@@ -254,8 +254,8 @@ export const Dashboard: React.FC = () => {
           subtitle="Live compliance audit tracking from database"
           className="h-full flex flex-col"
         >
-          <div className="max-h-[300px] overflow-y-auto overflow-x-auto custom-scrollbar">
-            <table className="w-full text-left text-sm">
+          <div className="table-slider max-h-[300px] overflow-y-auto custom-scrollbar">
+            <table className="w-full text-left text-sm min-w-[550px]">
               <thead className="bg-background text-muted border-b border-border uppercase tracking-wider text-xs sticky top-0 z-10">
                 <tr>
                   <th className="py-2.5 px-3">Employee</th>

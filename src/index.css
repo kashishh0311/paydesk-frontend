@@ -177,3 +177,44 @@ body {
       rgba(255, 255, 255, 0.16) 50%,
       rgba(255, 255, 255, 0) 100%);
 }
+
+.table-slider {
+  width: 100%;
+  overflow-x: auto;
+  -webkit-overflow-scrolling: touch;
+  scrollbar-width: thin;
+  scrollbar-color: #4f46e5 rgba(100, 116, 139, 0.12);
+}
+
+.table-slider::-webkit-scrollbar {
+  height: 8px;
+}
+
+.table-slider::-webkit-scrollbar-track {
+  background: rgba(100, 116, 139, 0.08);
+  border-radius: 9999px;
+  margin: 0 4px;
+}
+
+.table-slider::-webkit-scrollbar-thumb {
+  background: linear-gradient(90deg, #4f46e5 0%, #6366f1 100%);
+  border-radius: 9999px;
+  border: 1.5px solid transparent;
+  background-clip: padding-box;
+}
+
+.table-slider::-webkit-scrollbar-thumb:hover {
+  background: linear-gradient(90deg, #4338ca 0%, #4f46e5 100%);
+}
+
+.dark .table-slider {
+  scrollbar-color: #6366f1 rgba(255, 255, 255, 0.08);
+}
+
+.dark .table-slider::-webkit-scrollbar-track {
+  background: rgba(255, 255, 255, 0.06);
+}
+
+.dark .table-slider::-webkit-scrollbar-thumb {
+  background: linear-gradient(90deg, #6366f1 0%, #818cf8 100%);
+}

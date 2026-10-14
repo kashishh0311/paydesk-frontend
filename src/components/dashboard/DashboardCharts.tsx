@@ -49,11 +49,11 @@ export const PayrollTrendChart: React.FC<{ data: MonthlyTrendItem[] }> = ({ data
   }
 
   const svgWidth = 580;
-  const svgHeight = 200;
-  const paddingLeft = 75;
-  const paddingRight = 20;
+  const svgHeight = 250;
+  const paddingLeft = 80;
+  const paddingRight = 22;
   const paddingTop = 18;
-  const paddingBottom = 26;
+  const paddingBottom = 48;
 
   const chartWidth = svgWidth - paddingLeft - paddingRight;
   const chartHeight = svgHeight - paddingTop - paddingBottom;
@@ -97,16 +97,16 @@ export const PayrollTrendChart: React.FC<{ data: MonthlyTrendItem[] }> = ({ data
     <Card
       title="Monthly Payroll Progression"
       subtitle="12-month budget run-rate and salary actions"
-      className="h-full flex flex-col justify-between"
+      className="h-full flex flex-col"
       action={
         <span className="text-xs text-muted font-medium">
           12-Month Progression
         </span>
       }
     >
-      <div className="space-y-3">
+      <div className="flex-1 flex flex-col space-y-3 pt-1">
         {/* Simple Clean Sub-header */}
-        <div className="flex items-center justify-between px-3.5 py-2 rounded-xl bg-background border border-border text-xs">
+        <div className="flex items-center justify-between px-3.5 py-2.5 rounded-xl bg-background border border-border text-xs mb-3 shadow-2xs">
           <div>
             <span className="text-muted">
               {hoveredIndex !== null ? activeItem.item.label : 'Current Month'}:
@@ -124,10 +124,10 @@ export const PayrollTrendChart: React.FC<{ data: MonthlyTrendItem[] }> = ({ data
         </div>
 
         {/* Clean, Simple Monochromatic Bar Chart */}
-        <div className="relative w-full select-none pt-0.5">
+        <div className="flex-1 flex items-center justify-center relative w-full select-none pt-1 pb-2">
           <svg
             viewBox={`0 0 ${svgWidth} ${svgHeight}`}
-            className="w-full h-auto overflow-visible"
+            className="w-full h-auto"
             preserveAspectRatio="xMidYMid meet"
           >
             {/* Subtle Grid Guidelines */}
@@ -197,7 +197,7 @@ export const PayrollTrendChart: React.FC<{ data: MonthlyTrendItem[] }> = ({ data
                   {showLabel && (
                     <text
                       x={it.centerX}
-                      y={svgHeight - 10}
+                      y={svgHeight - 16}
                       textAnchor="middle"
                       className={`text-[10px] font-medium transition-colors ${
                         isHovered ? 'fill-primary font-bold' : 'fill-muted'
@@ -233,7 +233,7 @@ export const DepartmentBarChart: React.FC<{ data: DeptBreakdownItem[] }> = ({ da
         </span>
       }
     >
-      <div className="flex-1 space-y-1 overflow-y-auto pr-1.5 custom-scrollbar">
+      <div className="flex-1 space-y-1.5 overflow-y-auto pr-1.5 custom-scrollbar pt-1 pb-1">
         {(data || []).map((dept, idx) => {
           const barWidth = Math.max(6, Math.round((dept.totalSpend / maxSpend) * 100));
 

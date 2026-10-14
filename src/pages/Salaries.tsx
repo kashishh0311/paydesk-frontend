@@ -397,8 +397,8 @@ export const Salaries: React.FC = () => {
 
           {/* Salary Table */}
           <Card>
-            <div className="overflow-x-auto">
-              <table className={`w-full text-left text-sm transition-opacity ${loading ? 'opacity-60' : 'opacity-100'}`}>
+            <div className="table-slider">
+              <table className={`w-full text-left text-sm min-w-[950px] transition-opacity ${loading ? 'opacity-60' : 'opacity-100'}`}>
                 <thead className="bg-background text-muted border-b border-border uppercase tracking-wider text-xs">
                   <tr>
                     <th className="py-3 px-3.5">Employee</th>
