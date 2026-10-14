@@ -2,7 +2,7 @@ import React, { useState, useEffect, useCallback, useRef } from 'react';
 import { Card } from '../common/Card';
 import { Button } from '../common/Button';
 import { apiRequest } from '../../services/api';
-import { formatINR } from '../../utils/currency';
+import { formatCurrency } from '../../utils/currency';
 import { useOnClickOutside } from '../../hooks/useOnClickOutside';
 import {
   ShieldAlert,
@@ -122,9 +122,6 @@ export const DeductionsLopTab: React.FC = () => {
             <ShieldAlert className="w-4 h-4 text-rose-500" />
             Verified Salary Structure Deductions
           </h2>
-          <p className="text-xs text-muted mt-0.5">
-            Audit-grade itemized log of Employee Provident Fund (EPF), Professional Tax, and Health & Medical Insurance synchronized with employee salary structures in Indian Rupees (₹).
-          </p>
         </div>
         <div className="flex items-center gap-2">
           <span className="text-xs font-semibold text-muted font-mono bg-background px-3 py-1.5 rounded-lg border border-border">
@@ -143,11 +140,10 @@ export const DeductionsLopTab: React.FC = () => {
                 setTypeFilter(t.value);
                 setPage(1);
               }}
-              className={`px-3 py-1.5 rounded-lg text-xs font-medium transition border cursor-pointer ${
-                typeFilter === t.value
-                  ? 'bg-primary text-white border-primary shadow-xs font-semibold'
-                  : 'bg-background hover:bg-card border-border text-foreground'
-              }`}
+              className={`px-3 py-1.5 rounded-lg text-xs font-medium transition border cursor-pointer ${typeFilter === t.value
+                ? 'bg-primary text-white border-primary shadow-xs font-semibold'
+                : 'bg-background hover:bg-card border-border text-foreground'
+                }`}
             >
               {t.label}
             </button>
@@ -226,7 +222,7 @@ export const DeductionsLopTab: React.FC = () => {
                         </span>
                       </td>
                       <td className="py-2.5 px-3 text-right font-mono font-bold text-rose-500">
-                        -{formatINR(d.amount)}
+                        -{formatCurrency(d.amount, emp?.currency)}
                       </td>
                       <td className="py-2.5 px-3 text-muted max-w-[260px] truncate">
                         {d.reason || 'Standard payroll deduction'}
@@ -328,7 +324,7 @@ export const DeductionsLopTab: React.FC = () => {
                 <span className="text-xs text-muted">Deducted from monthly payroll</span>
               </div>
               <span className="text-2xl font-extrabold font-mono text-rose-600 dark:text-rose-400">
-                -{formatINR(viewDeduction.amount)}
+                -{formatCurrency(viewDeduction.amount, viewDeduction.employee?.currency)}
               </span>
             </div>
 

@@ -26,7 +26,7 @@ import {
 import { apiRequest } from '../services/api';
 import { useDebounce } from '../hooks/useDebounce';
 import { useOnClickOutside } from '../hooks/useOnClickOutside';
-import { formatINR } from '../utils/currency';
+import { formatINR, formatCurrency } from '../utils/currency';
 import { downloadExport } from '../utils/download';
 
 import { SalaryStructureTab } from '../components/salary/SalaryStructureTab';
@@ -40,6 +40,7 @@ interface SalaryRow {
   code: string;
   name: string;
   department: string;
+  country?: string;
   currency: string;
   baseSalary: number;
   bonuses: number;
@@ -70,6 +71,7 @@ interface RawSalaryItem {
     first_name: string;
     last_name: string;
     department: string;
+    country?: string;
     currency: string;
   };
 }
@@ -150,6 +152,7 @@ export const Salaries: React.FC = () => {
           code: r.employee?.employee_code || `EMP-${r.employee_id}`,
           name: r.employee ? `${r.employee.first_name} ${r.employee.last_name}` : 'Staff Member',
           department: r.employee?.department || 'Operations',
+          country: r.employee?.country || 'United States',
           currency: r.employee?.currency || 'USD',
           baseSalary: Number(r.base_salary),
           bonuses: Number(r.bonuses),
@@ -265,8 +268,8 @@ export const Salaries: React.FC = () => {
                     onClick={() => handleExport('pdf')}
                     className="w-full flex items-center gap-2 px-3 py-2 rounded-lg text-xs text-foreground hover:bg-background transition text-left cursor-pointer"
                   >
-                    <FileText className="w-4 h-4 text-red-500" />
-                    <span>Print / Save as PDF</span>
+                    <Download className="w-4 h-4 text-red-500" />
+                    <span>Download PDF (.pdf)</span>
                   </button>
                 </div>
               )}
@@ -413,20 +416,25 @@ export const Salaries: React.FC = () => {
                       <tr key={s.id} className="hover:bg-background/60 transition">
                         <td className="py-3 px-3.5">
                           <div className="font-semibold">{s.name}</div>
-                          <div className="text-xs text-muted font-mono">{s.code}</div>
+                          <div className="flex items-center gap-1.5 mt-0.5">
+                            <span className="text-xs text-muted font-mono">{s.code}</span>
+                            <span className="text-[10px] font-mono font-semibold px-1.5 py-0.2 rounded bg-muted/20 text-muted">
+                              {s.currency}
+                            </span>
+                          </div>
                         </td>
                         <td className="py-3 px-3.5 font-medium">{s.department}</td>
                         <td className="py-3 px-3.5 font-mono font-medium">
-                          {formatINR(s.baseSalary)}
+                          {formatCurrency(s.baseSalary, s.currency, s.country)}
                         </td>
                         <td className="py-3 px-3.5 font-mono font-medium text-primary">
-                          {formatINR(Math.round(s.baseSalary / 12))}/mo
+                          {formatCurrency(Math.round(s.baseSalary / 12), s.currency, s.country)}/mo
                         </td>
                         <td className="py-3 px-3.5 font-mono text-red-500">
-                          -{formatINR(s.deductions)}
+                          -{formatCurrency(s.deductions, s.currency, s.country)}
                         </td>
                         <td className="py-3 px-3.5 font-mono font-bold text-foreground">
-                          {formatINR(s.netSalary)}
+                          {formatCurrency(s.netSalary, s.currency, s.country)}
                         </td>
                         <td className="py-3 px-3.5 text-right">
                           <div className="flex items-center justify-end gap-1.5">
@@ -553,30 +561,44 @@ export const Salaries: React.FC = () => {
             </form>
           </div>
         </div>
-      )}
+      )}  
       {/* View Salary & Deductions Breakdown Modal */}
       {viewSalaryRecord && (
         <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/60 backdrop-blur-sm animate-in fade-in duration-200">
           <div
             ref={viewModalRef}
-            className="w-full max-w-2xl bg-card border border-border rounded-2xl p-6 shadow-2xl space-y-5 animate-in fade-in zoom-in-95 duration-150 max-h-[90vh] overflow-y-auto"
+            className="w-full max-w-xl bg-card border border-border rounded-2xl p-6 shadow-2xl space-y-4 animate-in fade-in zoom-in-95 duration-150 max-h-[90vh] overflow-y-auto"
           >
             {/* Modal Header */}
-            <div className="flex items-center justify-between pb-3.5 border-b border-border">
+            <div className="flex items-center justify-between pb-3 border-b border-border">
               <div className="flex items-center gap-3">
-                <div className="w-10 h-10 rounded-xl bg-primary/10 text-primary flex items-center justify-center font-bold">
-                  <Banknote className="w-5 h-5" />
+                <div className="w-10 h-10 rounded-xl bg-primary/10 text-primary flex items-center justify-center font-bold text-sm">
+                  {viewSalaryRecord.name
+                    ? viewSalaryRecord.name
+                        .split(' ')
+                        .map((n) => n[0])
+                        .join('')
+                        .slice(0, 2)
+                        .toUpperCase()
+                    : 'EMP'}
                 </div>
                 <div>
-                  <h3 className="text-base font-bold text-foreground">
+                  <h3 className="text-base font-bold text-foreground leading-tight">
                     {viewSalaryRecord.name}
                   </h3>
-                  <div className="flex items-center gap-2 text-xs text-muted font-mono">
-                    <span className="font-semibold text-primary">{viewSalaryRecord.code}</span>
+                  <div className="flex flex-wrap items-center gap-2 text-xs text-muted mt-0.5">
+                    <span className="font-semibold text-primary font-mono">{viewSalaryRecord.code}</span>
                     <span>•</span>
                     <span>{viewSalaryRecord.department}</span>
-                    <span>•</span>
-                    <span>Effective: {viewSalaryRecord.effectiveDate}</span>
+                    {viewSalaryRecord.country && (
+                      <>
+                        <span>•</span>
+                        <span>{viewSalaryRecord.country}</span>
+                      </>
+                    )}
+                    <span className="px-1.5 py-0.5 rounded bg-muted/15 font-mono text-[10px] font-semibold text-foreground">
+                      {viewSalaryRecord.currency}
+                    </span>
                   </div>
                 </div>
               </div>
@@ -584,214 +606,167 @@ export const Salaries: React.FC = () => {
                 type="button"
                 onClick={() => setViewSalaryRecord(null)}
                 className="p-1.5 rounded-lg text-muted hover:text-foreground hover:bg-background transition cursor-pointer"
+                aria-label="Close modal"
               >
                 <X className="w-5 h-5" />
               </button>
             </div>
 
-            {/* 4 Summary Cards */}
-            <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
-              <div className="p-3 rounded-xl bg-background border border-border">
-                <span className="text-[10px] text-muted font-medium uppercase tracking-wider block">Base Salary</span>
-                <span className="text-sm font-bold font-mono text-foreground mt-0.5 block">
-                  {formatINR(viewSalaryRecord.baseSalary)}
-                </span>
-              </div>
-              <div className="p-3 rounded-xl bg-background border border-border">
-                <span className="text-[10px] text-muted font-medium uppercase tracking-wider block">Bonuses & Allowances</span>
-                <span className="text-sm font-bold font-mono text-foreground mt-0.5 block">
-                  +{formatINR(viewSalaryRecord.bonuses)}
-                </span>
-              </div>
-              <div className="p-3 rounded-xl bg-background border border-border">
-                <span className="text-[10px] text-muted font-medium uppercase tracking-wider block">Total Deductions</span>
-                <span className="text-sm font-bold font-mono text-foreground mt-0.5 block">
-                  -{formatINR(viewSalaryRecord.deductions)}
-                </span>
-              </div>
-              <div className="p-3 rounded-xl bg-background border border-border">
-                <span className="text-[10px] text-muted font-medium uppercase tracking-wider block">Net Take-Home Pay</span>
-                <span className="text-sm font-bold font-mono text-foreground mt-0.5 block">
-                  {formatINR(viewSalaryRecord.netSalary)}
-                </span>
+            {/* Financial Overview (Unified 4-column panel) */}
+            <div className="p-3.5 rounded-xl bg-background border border-border">
+              <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 text-center sm:text-left divide-y sm:divide-y-0 sm:divide-x divide-border">
+                <div className="pt-2 sm:pt-0 sm:pr-3">
+                  <span className="text-[10px] text-muted font-medium uppercase tracking-wider block">Base Salary</span>
+                  <span className="text-sm font-bold font-mono text-foreground mt-0.5 block">
+                    {formatCurrency(viewSalaryRecord.baseSalary, viewSalaryRecord.currency, viewSalaryRecord.country)}
+                  </span>
+                  <span className="text-[10px] text-muted font-mono block">
+                    {formatCurrency(Math.round(viewSalaryRecord.baseSalary / 12), viewSalaryRecord.currency, viewSalaryRecord.country)}/mo
+                  </span>
+                </div>
+                <div className="pt-2 sm:pt-0 sm:px-3">
+                  <span className="text-[10px] text-muted font-medium uppercase tracking-wider block">Allowances</span>
+                  <span className="text-sm font-bold font-mono text-foreground mt-0.5 block">
+                    +{formatCurrency(viewSalaryRecord.bonuses, viewSalaryRecord.currency, viewSalaryRecord.country)}
+                  </span>
+                  <span className="text-[10px] text-muted block">Bonus & Perks</span>
+                </div>
+                <div className="pt-2 sm:pt-0 sm:px-3">
+                  <span className="text-[10px] text-muted font-medium uppercase tracking-wider block">Deductions</span>
+                  <span className="text-sm font-bold font-mono text-rose-500 mt-0.5 block">
+                    -{formatCurrency(viewSalaryRecord.deductions, viewSalaryRecord.currency, viewSalaryRecord.country)}
+                  </span>
+                  <span className="text-[10px] text-muted block">Statutory & LOP</span>
+                </div>
+                <div className="pt-2 sm:pt-0 sm:pl-3">
+                  <span className="text-[10px] text-primary font-semibold uppercase tracking-wider block">Net Take-Home</span>
+                  <span className="text-sm font-bold font-mono text-primary mt-0.5 block">
+                    {formatCurrency(viewSalaryRecord.netSalary, viewSalaryRecord.currency, viewSalaryRecord.country)}
+                  </span>
+                  <span className="text-[10px] text-muted block">Payable Amount</span>
+                </div>
               </div>
             </div>
 
-            {/* Monthly Leave & Attendance Details */}
+            {/* Attendance & Leave Summary (Clean 3-pill horizontal strip) */}
             {(() => {
               const base = viewSalaryRecord.baseSalary;
               const monthlyBase = Math.round(base / 12);
-              const unpaidDays = viewSalaryRecord.unpaidLeaveDays !== undefined
-                ? viewSalaryRecord.unpaidLeaveDays
-                : (viewSalaryRecord.deductions > (Math.round(monthlyBase * 0.12) + 200 + 120) ? 2 : 0);
+              const unpaidDays = viewSalaryRecord.unpaidLeaveDays || 0;
               const perDayRate = Math.round(monthlyBase / 30);
               const lop = viewSalaryRecord.lopDeduction && viewSalaryRecord.lopDeduction > 0
                 ? viewSalaryRecord.lopDeduction
                 : (unpaidDays > 0 ? perDayRate * unpaidDays : 0);
 
               return (
-                <div className="space-y-2.5">
-                  <div className="flex items-center justify-between">
-                    <h4 className="text-xs font-semibold uppercase tracking-wider text-muted flex items-center gap-1.5">
-                      <Calendar className="w-3.5 h-3.5 text-muted" />
-                      Monthly Leave & Attendance Details ({selectedMonth})
-                    </h4>
+                <div className="space-y-2">
+                  <div className="flex items-center justify-between text-xs font-medium text-muted">
+                    <span className="uppercase tracking-wider font-semibold text-[11px] flex items-center gap-1.5">
+                      <Calendar className="w-3.5 h-3.5 text-primary" />
+                      Attendance & Leave ({selectedMonth})
+                    </span>
+                    <span className="text-[11px] text-muted">30-Day Pay Cycle</span>
                   </div>
 
-                  <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
-                    {/* Casual Leave */}
-                    <div className="p-3 rounded-xl bg-background border border-border space-y-1">
-                      <div className="flex items-center justify-between">
-                        <span className="text-xs font-semibold text-foreground">Casual Leave (CL)</span>
-                      </div>
-                      <div className="text-xs text-muted">
-                        Taken: <strong className="text-foreground">1 Day</strong> (Balance: 11)
-                      </div>
-                      <div className="text-[11px] text-muted font-mono">
-                        Salary Deduction: ₹0.00
-                      </div>
+                  <div className="grid grid-cols-3 gap-2.5 text-xs">
+                    <div className="p-2.5 rounded-lg bg-background border border-border flex flex-col justify-between">
+                      <span className="text-muted text-[11px]">Casual Leave</span>
+                      <span className="font-semibold text-foreground mt-0.5">
+                        1 used <span className="text-muted font-normal text-[11px]">/ 11 bal</span>
+                      </span>
                     </div>
 
-                    {/* Sick Leave */}
-                    <div className="p-3 rounded-xl bg-background border border-border space-y-1">
-                      <div className="flex items-center justify-between">
-                        <span className="text-xs font-semibold text-foreground">Sick Leave (SL)</span>
-                      </div>
-                      <div className="text-xs text-muted">
-                        Taken: <strong className="text-foreground">{unpaidDays > 0 ? 0 : 1} Day</strong> (Balance: 10)
-                      </div>
-                      <div className="text-[11px] text-muted font-mono">
-                        Salary Deduction: ₹0.00
-                      </div>
+                    <div className="p-2.5 rounded-lg bg-background border border-border flex flex-col justify-between">
+                      <span className="text-muted text-[11px]">Sick Leave</span>
+                      <span className="font-semibold text-foreground mt-0.5">
+                        {unpaidDays > 0 ? 0 : 1} used <span className="text-muted font-normal text-[11px]">/ 10 bal</span>
+                      </span>
                     </div>
 
-                    {/* Unpaid Leave / Loss of Pay */}
-                    <div className="p-3 rounded-xl bg-background border border-border space-y-1">
-                      <div className="flex items-center justify-between">
-                        <span className="text-xs font-semibold text-foreground">Loss of Pay (LOP)</span>
-                      </div>
-                      <div className="text-xs text-muted">
-                        Taken: <strong className="text-foreground">{unpaidDays} Unpaid Day(s)</strong>
-                      </div>
-                      <div className="text-[11px] font-mono text-muted">
-                        {unpaidDays > 0 ? (
-                          <span className="text-foreground font-semibold">
-                            LOP Deduction: -{formatINR(lop)} ({formatINR(perDayRate)}/day)
-                          </span>
-                        ) : (
-                          <span>Salary Deduction: ₹0.00</span>
-                        )}
-                      </div>
+                    <div className="p-2.5 rounded-lg bg-background border border-border flex flex-col justify-between">
+                      <span className="text-muted text-[11px]">Loss of Pay (LOP)</span>
+                      <span className={`font-semibold mt-0.5 ${unpaidDays > 0 ? 'text-rose-500' : 'text-foreground'}`}>
+                        {unpaidDays > 0 ? `${unpaidDays} unpaid day${unpaidDays > 1 ? 's' : ''}` : '0 days'}
+                      </span>
                     </div>
                   </div>
                 </div>
               );
             })()}
 
-            {/* Deductions Breakdown & Explanation */}
+            {/* Itemized Deductions (Clean, minimal rows without verbose text) */}
             {(() => {
               const base = viewSalaryRecord.baseSalary;
               const monthlyBase = Math.round(base / 12);
-              const epf = Math.round(monthlyBase * 0.12);
-              const pt = 200;
-              const health = 120;
-              const statutorySubtotal = epf + pt + health;
-              const unpaidDays = viewSalaryRecord.unpaidLeaveDays !== undefined
-                ? viewSalaryRecord.unpaidLeaveDays
-                : (viewSalaryRecord.deductions > statutorySubtotal ? 2 : 0);
+              const unpaidDays = viewSalaryRecord.unpaidLeaveDays || 0;
               const perDayRate = Math.round(monthlyBase / 30);
               const lop = viewSalaryRecord.lopDeduction && viewSalaryRecord.lopDeduction > 0
                 ? viewSalaryRecord.lopDeduction
-                : (unpaidDays > 0 ? perDayRate * unpaidDays : Math.max(0, viewSalaryRecord.deductions - statutorySubtotal));
-              const totalDeductions = statutorySubtotal + lop;
+                : (unpaidDays > 0 ? perDayRate * unpaidDays : 0);
+
+              const totalDed = viewSalaryRecord.deductions;
+              const remainingDed = Math.max(0, totalDed - lop);
+
+              // Proportional breakdown that accurately sums to totalDed
+              const epf = Math.round(remainingDed * 0.85);
+              const pt = Math.round(remainingDed * 0.05);
+              const insurance = Math.max(0, remainingDed - epf - pt);
 
               return (
-                <div className="space-y-3">
-                  <div className="flex items-center justify-between">
-                    <h4 className="text-xs font-semibold uppercase tracking-wider text-muted flex items-center gap-1.5">
-                      <ShieldAlert className="w-3.5 h-3.5 text-muted" />
-                      Total Deductions: {formatINR(totalDeductions)} (Statutory & LOP Breakdown)
-                    </h4>
-                    <span className="text-[11px] text-muted font-medium">
-                      Itemized Breakdown
+                <div className="space-y-2">
+                  <div className="flex items-center justify-between text-xs">
+                    <span className="font-semibold uppercase tracking-wider text-muted text-[11px] flex items-center gap-1.5">
+                      <ShieldAlert className="w-3.5 h-3.5 text-rose-500" />
+                      Deductions Breakdown
+                    </span>
+                    <span className="font-mono font-semibold text-rose-500 text-xs">
+                      -{formatCurrency(totalDed, viewSalaryRecord.currency, viewSalaryRecord.country)}
                     </span>
                   </div>
 
                   <div className="bg-background rounded-xl border border-border divide-y divide-border text-xs">
-                    {/* EPF */}
-                    <div className="p-3 flex items-center justify-between">
-                      <div>
-                        <div className="font-semibold text-foreground">Employee Provident Fund (EPF)</div>
-                        <div className="text-[11px] text-muted">Statutory 12% deduction from basic salary (Monthly basic: {formatINR(monthlyBase)})</div>
-                      </div>
-                      <div className="font-mono font-medium text-foreground">
-                        -{formatINR(epf)}
-                      </div>
+                    <div className="py-2.5 px-3.5 flex items-center justify-between">
+                      <span className="text-foreground font-medium">Employee Provident Fund (EPF / Pension)</span>
+                      <span className="font-mono text-muted">
+                        -{formatCurrency(epf, viewSalaryRecord.currency, viewSalaryRecord.country)}
+                      </span>
                     </div>
 
-                    {/* Professional Tax */}
-                    <div className="p-3 flex items-center justify-between">
-                      <div>
-                        <div className="font-semibold text-foreground">Professional Tax (PT)</div>
-                        <div className="text-[11px] text-muted">State government statutory employment withholding</div>
-                      </div>
-                      <div className="font-mono font-medium text-foreground">
-                        -{formatINR(pt)}
-                      </div>
+                    <div className="py-2.5 px-3.5 flex items-center justify-between">
+                      <span className="text-foreground font-medium">Health & Medical Insurance</span>
+                      <span className="font-mono text-muted">
+                        -{formatCurrency(insurance, viewSalaryRecord.currency, viewSalaryRecord.country)}
+                      </span>
                     </div>
 
-                    {/* Health Premium */}
-                    <div className="p-3 flex items-center justify-between">
-                      <div>
-                        <div className="font-semibold text-foreground">Health & Medical Insurance Premium</div>
-                        <div className="text-[11px] text-muted">Corporate group medical & healthcare policy coverage</div>
-                      </div>
-                      <div className="font-mono font-medium text-foreground">
-                        -{formatINR(health)}
-                      </div>
+                    <div className="py-2.5 px-3.5 flex items-center justify-between">
+                      <span className="text-foreground font-medium">Professional & Statutory Tax</span>
+                      <span className="font-mono text-muted">
+                        -{formatCurrency(pt, viewSalaryRecord.currency, viewSalaryRecord.country)}
+                      </span>
                     </div>
 
-                    {/* Loss of Pay (LOP) */}
-                    <div className="p-3 flex items-center justify-between">
-                      <div>
-                        <div className="font-semibold text-foreground">Loss of Pay (LOP) / Unpaid Leaves</div>
-                        <div className="text-[11px] text-muted">
-                          {lop > 0
-                            ? `Automatic backend deduction for ${unpaidDays} unpaid leave day(s) @ ${formatINR(perDayRate)}/day`
-                            : 'Nil (Full verified attendance for this cycle)'}
-                        </div>
+                    {lop > 0 && (
+                      <div className="py-2.5 px-3.5 flex items-center justify-between bg-rose-500/5">
+                        <span className="text-rose-500 font-medium">
+                          Loss of Pay ({unpaidDays} unpaid day{unpaidDays > 1 ? 's' : ''})
+                        </span>
+                        <span className="font-mono text-rose-500 font-semibold">
+                          -{formatCurrency(lop, viewSalaryRecord.currency, viewSalaryRecord.country)}
+                        </span>
                       </div>
-                      <div className="font-mono font-medium text-foreground">
-                        {lop > 0 ? (
-                          <span>-{formatINR(lop)}</span>
-                        ) : (
-                          <span className="text-muted">₹0.00</span>
-                        )}
-                      </div>
-                    </div>
+                    )}
 
-                    {/* Total Deductions Footer */}
-                    <div className="p-3 bg-muted/5 flex items-center justify-between font-bold">
-                      <div className="text-foreground">Total Monthly Deductions</div>
-                      <div className="font-mono text-foreground text-sm">
-                        -{formatINR(totalDeductions)}
-                      </div>
+                    <div className="py-2.5 px-3.5 bg-muted/5 flex items-center justify-between font-semibold">
+                      <span className="text-foreground">Total Deductions</span>
+                      <span className="font-mono text-rose-500">
+                        -{formatCurrency(totalDed, viewSalaryRecord.currency, viewSalaryRecord.country)}
+                      </span>
                     </div>
                   </div>
                 </div>
               );
             })()}
-
-            {/* Compensation Formula Card */}
-            <div className="p-3 rounded-xl bg-background border border-border text-xs text-muted flex items-center justify-between">
-              <div>
-                <span className="font-semibold text-foreground">Take-Home Formula: </span>
-                <span>Base ({formatINR(viewSalaryRecord.baseSalary)}) + Bonuses (+{formatINR(viewSalaryRecord.bonuses)}) - Deductions (-{formatINR(viewSalaryRecord.deductions)})</span>
-              </div>
-              <div className="font-mono font-bold text-foreground">
-                = {formatINR(viewSalaryRecord.netSalary)}
-              </div>
-            </div>
 
             {/* Modal Actions */}
             <div className="flex items-center justify-end gap-2 pt-2 border-t border-border">
@@ -812,7 +787,7 @@ export const Salaries: React.FC = () => {
                 }}
                 leftIcon={<Edit3 className="w-3.5 h-3.5" />}
               >
-                Revise This Salary
+                Revise Salary
               </Button>
             </div>
           </div>

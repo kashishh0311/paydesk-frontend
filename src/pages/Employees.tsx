@@ -16,7 +16,6 @@ import {
   X,
   Check,
   FileSpreadsheet,
-  FileText,
   RotateCcw,
   Eye,
   Loader2
@@ -249,10 +248,10 @@ export const Employees: React.FC = () => {
                 </button>
                 <button
                   onClick={() => handleExport('pdf')}
-                  className="w-full flex items-center gap-2 px-3 py-2 rounded-lg text-xs text-foreground hover:bg-background transition text-left"
+                  className="w-full flex items-center gap-2 px-3 py-2 rounded-lg text-xs text-foreground hover:bg-background transition text-left cursor-pointer"
                 >
-                  <FileText className="w-4 h-4 text-red-500" />
-                  <span>Print / Save as PDF</span>
+                  <Download className="w-4 h-4 text-red-500" />
+                  <span>Download PDF (.pdf)</span>
                 </button>
               </div>
             )}
@@ -401,7 +400,7 @@ export const Employees: React.FC = () => {
                       </div>
                     </td>
                   </tr>
-                  
+
                 ))
               )}
             </tbody>

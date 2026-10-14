@@ -1,7 +1,7 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { Card } from '../common/Card';
 import { apiRequest } from '../../services/api';
-import { formatINR } from '../../utils/currency';
+import { formatINR, formatCurrency } from '../../utils/currency';
 import { showSuccessToast, showErrorToast } from '../../utils/toast';
 import { useOnClickOutside } from '../../hooks/useOnClickOutside';
 import {
@@ -266,7 +266,7 @@ export const SalarySlipsTab: React.FC = () => {
                   </span>
                 </div>
                 <p className="text-xs text-muted">
-                  {historyData.employee.job_title} • {historyData.employee.department} • INR (₹)
+                  {historyData.employee.job_title} • {historyData.employee.department} • {historyData.employee.country || 'International'} ({historyData.employee.currency || 'USD'})
                 </p>
               </div>
             </div>
@@ -275,10 +275,10 @@ export const SalarySlipsTab: React.FC = () => {
               <div className="text-right">
                 <span className="text-[11px] text-muted block">Monthly Base Salary</span>
                 <div className="text-lg font-bold font-mono text-foreground">
-                  {formatINR(Math.round((historyData.salaryHistory[0]?.base_salary || 600000) / 12))} <span className="text-xs font-normal text-muted">/ mo</span>
+                  {formatCurrency(Math.round((historyData.salaryHistory[0]?.base_salary || 600000) / 12), historyData.employee.currency, historyData.employee.country)} <span className="text-xs font-normal text-muted">/ mo</span>
                 </div>
                 <span className="text-[10px] text-rose-500 font-mono block">
-                  Monthly Deductions: -{formatINR(Math.round((historyData.salaryHistory[0]?.deductions || 72000) / 12))} / mo
+                  Monthly Deductions: -{formatCurrency(Math.round((historyData.salaryHistory[0]?.deductions || 72000) / 12), historyData.employee.currency, historyData.employee.country)} / mo
                 </span>
               </div>
             </div>
@@ -311,13 +311,13 @@ export const SalarySlipsTab: React.FC = () => {
                         </span>
                       </div>
                       <div className="text-xs text-muted space-x-2">
-                        <span>Net Pay: <strong className="text-primary font-mono">{formatINR(run.net_salary)}</strong></span>
+                        <span>Net Pay: <strong className="text-primary font-mono">{formatCurrency(run.net_salary, historyData.employee.currency, historyData.employee.country)}</strong></span>
                         <span>•</span>
-                        <span>Gross: <strong className="text-foreground font-mono">{formatINR(run.gross_salary)}</strong></span>
+                        <span>Gross: <strong className="text-foreground font-mono">{formatCurrency(run.gross_salary, historyData.employee.currency, historyData.employee.country)}</strong></span>
                         {Number(run.bonus_amount) > 0 && (
                           <>
                             <span>•</span>
-                            <span className="text-emerald-600 dark:text-emerald-400 font-semibold font-mono">Bonus: +{formatINR(run.bonus_amount)}</span>
+                            <span className="text-emerald-600 dark:text-emerald-400 font-semibold font-mono">Bonus: +{formatCurrency(run.bonus_amount, historyData.employee.currency, historyData.employee.country)}</span>
                           </>
                         )}
                       </div>
@@ -479,21 +479,21 @@ export const SalarySlipsTab: React.FC = () => {
                     <h4 className="font-bold text-foreground border-b border-border pb-1.5">Earnings</h4>
                     <div className="flex justify-between">
                       <span className="text-muted">Monthly Basic Pay:</span>
-                      <strong className="font-mono text-foreground">{formatINR(previewSlip.basic_salary)}</strong>
+                      <strong className="font-mono text-foreground">{formatCurrency(previewSlip.basic_salary, previewSlip.employee?.currency, previewSlip.employee?.country)}</strong>
                     </div>
                     <div className="flex justify-between">
                       <span className="text-muted">Allowances:</span>
-                      <strong className="font-mono text-foreground">{formatINR(previewSlip.allowances)}</strong>
+                      <strong className="font-mono text-foreground">{formatCurrency(previewSlip.allowances, previewSlip.employee?.currency, previewSlip.employee?.country)}</strong>
                     </div>
                     {Number(previewSlip.bonus_amount) > 0 && (
                       <div className="flex justify-between">
                         <span className="text-emerald-600 dark:text-emerald-400 font-medium">Performance Bonus:</span>
-                        <strong className="font-mono text-emerald-600 dark:text-emerald-400">+{formatINR(previewSlip.bonus_amount)}</strong>
+                        <strong className="font-mono text-emerald-600 dark:text-emerald-400">+{formatCurrency(previewSlip.bonus_amount, previewSlip.employee?.currency, previewSlip.employee?.country)}</strong>
                       </div>
                     )}
                     <div className="flex justify-between border-t border-border pt-2 font-bold">
                       <span className="text-foreground">Gross Earnings:</span>
-                      <span className="font-mono text-primary">{formatINR(previewSlip.gross_salary)}</span>
+                      <span className="font-mono text-primary">{formatCurrency(previewSlip.gross_salary, previewSlip.employee?.currency, previewSlip.employee?.country)}</span>
                     </div>
                   </div>
 
@@ -507,13 +507,13 @@ export const SalarySlipsTab: React.FC = () => {
                             <span className="text-foreground font-semibold block">{d.deduction_type}</span>
                             <span className="text-[10px] text-muted">{d.reason}</span>
                           </div>
-                          <strong className="font-mono text-rose-500">-{formatINR(d.amount)}</strong>
+                          <strong className="font-mono text-rose-500">-{formatCurrency(d.amount, previewSlip.employee?.currency, previewSlip.employee?.country)}</strong>
                         </div>
                       ))
                     ) : (
                       <div className="flex justify-between">
                         <span className="text-muted">Statutory Deductions:</span>
-                        <strong className="font-mono text-rose-500">-{formatINR(previewSlip.total_deductions)}</strong>
+                        <strong className="font-mono text-rose-500">-{formatCurrency(previewSlip.total_deductions, previewSlip.employee?.currency, previewSlip.employee?.country)}</strong>
                       </div>
                     )}
                     {/* Explicit Loss of Pay (LOP) display if not already in deductions list */}
@@ -523,12 +523,12 @@ export const SalarySlipsTab: React.FC = () => {
                           <span className="text-foreground font-semibold block">Loss of Pay (LOP)</span>
                           <span className="text-[10px] text-muted">{previewSlip.unpaid_leave_days || 1} day(s) unpaid leave deduction</span>
                         </div>
-                        <strong className="font-mono text-rose-500">-{formatINR(previewSlip.lop_deduction)}</strong>
+                        <strong className="font-mono text-rose-500">-{formatCurrency(previewSlip.lop_deduction, previewSlip.employee?.currency, previewSlip.employee?.country)}</strong>
                       </div>
                     )}
                     <div className="flex justify-between border-t border-border pt-2 font-bold">
                       <span className="text-rose-600">Total Deductions:</span>
-                      <span className="font-mono text-rose-600">-{formatINR(previewSlip.total_deductions)}</span>
+                      <span className="font-mono text-rose-600">-{formatCurrency(previewSlip.total_deductions, previewSlip.employee?.currency, previewSlip.employee?.country)}</span>
                     </div>
                   </div>
                 </div>
@@ -542,7 +542,7 @@ export const SalarySlipsTab: React.FC = () => {
                     <span className="text-xs opacity-80">Credited to employee salary bank account</span>
                   </div>
                   <span className="text-2xl font-extrabold font-mono">
-                    {formatINR(previewSlip.net_salary)}
+                    {formatCurrency(previewSlip.net_salary, previewSlip.employee?.currency, previewSlip.employee?.country)}
                   </span>
                 </div>
               </div>
