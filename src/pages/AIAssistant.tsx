@@ -19,11 +19,20 @@ export const AIAssistant: React.FC = () => {
   ]);
   const [inputQuery, setInputQuery] = useState('');
   const [loading, setLoading] = useState(false);
-  const messagesEndRef = useRef<HTMLDivElement>(null);
+  const chatScrollRef = useRef<HTMLDivElement>(null);
+
+  const scrollToBottom = (behavior: ScrollBehavior = 'smooth') => {
+    if (chatScrollRef.current) {
+      chatScrollRef.current.scrollTo({
+        top: chatScrollRef.current.scrollHeight,
+        behavior
+      });
+    }
+  };
 
   useEffect(() => {
-    messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
-  }, [messages, loading]);
+    scrollToBottom('smooth');
+  }, [messages.length, loading]);
 
   const handleSend = async () => {
     if (!inputQuery.trim() || loading) return;
@@ -62,7 +71,6 @@ export const AIAssistant: React.FC = () => {
       setLoading(false);
     }
   };
-
 
   const renderFormattedMessage = (content: string, isUser: boolean) => {
     const lines = content.split('\n');
@@ -112,26 +120,30 @@ export const AIAssistant: React.FC = () => {
   };
 
   return (
-    <div className="flex-1 flex flex-col w-full space-y-4 min-h-0">
+    <div className="h-[calc(100vh-110px)] lg:h-[calc(100vh-125px)] flex flex-col w-full space-y-3 overflow-hidden">
       {/* Header */}
-      <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 shrink-0">
+      <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 shrink-0">
         <div>
-          <h1 className="text-2xl font-bold tracking-tight text-foreground flex items-center gap-2.5">
-            <Sparkles className="w-6 h-6 text-primary" />
+          <h1 className="text-xl sm:text-2xl font-bold tracking-tight text-foreground flex items-center gap-2.5">
+            <Sparkles className="w-5 h-5 sm:w-6 sm:h-6 text-primary" />
             AI Salary & Compensation Assistant
           </h1>
-          <p className="text-sm text-muted mt-1">
+          <p className="text-xs sm:text-sm text-muted mt-0.5">
             Inquire in natural language with verified data from our MySQL workforce database.
           </p>
         </div>
-        <span className="text-xs font-semibold px-3 py-1.5 rounded-lg bg-primary/10 text-primary border border-primary/20 self-start sm:self-auto">
+        <span className="text-xs font-semibold px-3 py-1.5 rounded-lg bg-primary/10 text-primary border border-primary/20 self-start sm:self-auto shrink-0">
           Powered by Groq LLM
         </span>
       </div>
 
-      {/* Chat Window: stretches to fill full height with exact 30px bottom spacing */}
-      <Card className="flex-1 flex flex-col justify-between p-5 min-h-[480px] shadow-sm">
-        <div className="flex-1 overflow-y-auto space-y-4 pr-3 pb-6 min-h-0">
+      {/* Main Chat Box Container: Exactly fills remaining height, never scrolls outer page */}
+      <div className="flex-1 min-h-0 bg-card border border-border rounded-2xl shadow-xs flex flex-col overflow-hidden">
+        {/* Scrollable Messages Area */}
+        <div
+          ref={chatScrollRef}
+          className="flex-1 min-h-0 overflow-y-auto p-4 sm:p-5 space-y-4 overscroll-contain"
+        >
           {messages.map((m, idx) => (
             <div
               key={idx}
@@ -140,12 +152,12 @@ export const AIAssistant: React.FC = () => {
               }`}
             >
               {m.role === 'assistant' && (
-                <div className="w-9 h-9 rounded-xl bg-primary text-white flex items-center justify-center shrink-0 shadow-sm mt-0.5">
-                  <Bot className="w-5 h-5" />
+                <div className="w-8 h-8 sm:w-9 sm:h-9 rounded-xl bg-primary text-white flex items-center justify-center shrink-0 shadow-xs mt-0.5">
+                  <Bot className="w-4 h-4 sm:w-5 sm:h-5" />
                 </div>
               )}
               <div
-                className={`max-w-[85%] rounded-2xl p-4 text-sm shadow-sm ${
+                className={`max-w-[85%] rounded-2xl p-3.5 sm:p-4 text-xs sm:text-sm shadow-2xs ${
                   m.role === 'user'
                     ? 'bg-primary text-white font-medium'
                     : 'bg-background border border-border text-foreground'
@@ -154,31 +166,30 @@ export const AIAssistant: React.FC = () => {
                 {renderFormattedMessage(m.content, m.role === 'user')}
               </div>
               {m.role === 'user' && (
-                <div className="w-9 h-9 rounded-xl bg-card border border-border text-muted flex items-center justify-center shrink-0 mt-0.5">
-                  <UserIcon className="w-5 h-5" />
+                <div className="w-8 h-8 sm:w-9 sm:h-9 rounded-xl bg-card border border-border text-muted flex items-center justify-center shrink-0 mt-0.5">
+                  <UserIcon className="w-4 h-4 sm:w-5 sm:h-5" />
                 </div>
               )}
             </div>
           ))}
 
           {loading && (
-            <div className="flex items-center gap-3.5 text-sm text-muted p-2">
-              <div className="w-9 h-9 rounded-xl bg-primary/10 text-primary flex items-center justify-center shrink-0 animate-pulse">
-                <Bot className="w-5 h-5" />
+            <div className="flex items-center gap-3 text-xs sm:text-sm text-muted p-2">
+              <div className="w-8 h-8 rounded-xl bg-primary/10 text-primary flex items-center justify-center shrink-0 animate-pulse">
+                <Bot className="w-4 h-4" />
               </div>
               <span>PayDesk AI is evaluating verified database records...</span>
             </div>
           )}
-
-          <div ref={messagesEndRef} className="h-6" />
         </div>
 
+        {/* Fixed Message Input Bar at the Bottom */}
         <form
           onSubmit={(e) => {
             e.preventDefault();
             handleSend();
           }}
-          className="pt-4 border-t border-border flex items-center gap-3 bg-card"
+          className="shrink-0 p-3 sm:p-4 border-t border-border bg-card flex items-center gap-2.5 sm:gap-3"
         >
           <input
             type="text"
@@ -186,7 +197,7 @@ export const AIAssistant: React.FC = () => {
             onChange={(e) => setInputQuery(e.target.value)}
             disabled={loading}
             placeholder="Ask about salary distribution, department costs, median pay..."
-            className="flex-1 h-12 px-4 rounded-xl bg-input border border-border text-foreground text-sm focus:outline-none focus:ring-2 focus:ring-primary disabled:opacity-50"
+            className="flex-1 h-11 sm:h-12 px-4 rounded-xl bg-background border border-border text-foreground text-xs sm:text-sm focus:outline-none focus:ring-1 focus:ring-primary disabled:opacity-50"
           />
           <Button
             type="submit"
@@ -194,11 +205,12 @@ export const AIAssistant: React.FC = () => {
             disabled={!inputQuery.trim() || loading}
             isLoading={loading}
             leftIcon={<Send className="w-4 h-4" />}
+            className="h-11 sm:h-12 px-4 sm:px-5 shrink-0"
           >
             Ask AI
           </Button>
         </form>
-      </Card>
+      </div>
     </div>
   );
 };

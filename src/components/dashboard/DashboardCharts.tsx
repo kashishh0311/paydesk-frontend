@@ -73,13 +73,12 @@ export const PayrollTrendChart: React.FC<{ data: MonthlyTrendItem[] }> = ({ data
     );
   }
 
-  // Compact dimensions for side-by-side layout
-  const svgWidth = 520;
-  const svgHeight = 170;
-  const paddingLeft = 52;
-  const paddingRight = 20;
-  const paddingTop = 15;
-  const paddingBottom = 32;
+  const svgWidth = 580;
+  const svgHeight = 220;
+  const paddingLeft = 78;
+  const paddingRight = 24;
+  const paddingTop = 20;
+  const paddingBottom = 36;
 
   const chartWidth = svgWidth - paddingLeft - paddingRight;
   const chartHeight = svgHeight - paddingTop - paddingBottom;
@@ -140,7 +139,7 @@ export const PayrollTrendChart: React.FC<{ data: MonthlyTrendItem[] }> = ({ data
         </div>
 
         {/* Compact Soft SVG Line Chart */}
-        <div className="relative w-full overflow-hidden select-none">
+        <div className="relative w-full select-none pt-1">
           <svg
             viewBox={`0 0 ${svgWidth} ${svgHeight}`}
             className="w-full h-auto overflow-visible"
@@ -166,7 +165,7 @@ export const PayrollTrendChart: React.FC<{ data: MonthlyTrendItem[] }> = ({ data
                   strokeDasharray="3 3"
                 />
                 <text
-                  x={paddingLeft - 6}
+                  x={paddingLeft - 8}
                   y={tick.y + 3}
                   textAnchor="end"
                   fill="currentColor"
@@ -212,9 +211,8 @@ export const PayrollTrendChart: React.FC<{ data: MonthlyTrendItem[] }> = ({ data
                       x={pt.x}
                       y={svgHeight - 8}
                       textAnchor="middle"
-                      className={`text-[10px] font-medium transition-colors ${
-                        isHovered ? 'fill-primary font-bold' : 'fill-muted'
-                      }`}
+                      className={`text-[10px] font-medium transition-colors ${isHovered ? 'fill-primary font-bold' : 'fill-muted'
+                        }`}
                     >
                       {pt.item.label}
                     </text>
