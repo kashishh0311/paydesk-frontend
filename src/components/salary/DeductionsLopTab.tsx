@@ -4,12 +4,12 @@ import { Button } from '../common/Button';
 import { apiRequest } from '../../services/api';
 import { formatCurrency } from '../../utils/currency';
 import { useOnClickOutside } from '../../hooks/useOnClickOutside';
+import { TableRowSkeleton, EmptyState, ErrorState } from '../common/Skeleton';
 import {
   ShieldAlert,
   Search,
   Eye,
   X,
-  Loader2,
   ChevronLeft,
   ChevronRight,
 } from 'lucide-react';
@@ -44,6 +44,7 @@ interface DeductionRow {
 export const DeductionsLopTab: React.FC = () => {
   const [deductions, setDeductions] = useState<DeductionRow[]>([]);
   const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
   const [typeFilter, setTypeFilter] = useState('all');
   const [search, setSearch] = useState('');
   const [page, setPage] = useState(1);
@@ -59,6 +60,7 @@ export const DeductionsLopTab: React.FC = () => {
 
   const fetchDeductions = useCallback(async () => {
     setLoading(true);
+    setError(null);
     try {
       const queryParams = new URLSearchParams({
         page: String(page),
@@ -185,17 +187,25 @@ export const DeductionsLopTab: React.FC = () => {
               </tr>
             </thead>
             <tbody className="divide-y divide-border text-foreground">
-              {loading ? (
+              {loading && deductions.length === 0 ? (
+                <TableRowSkeleton columns={7} rows={8} />
+              ) : error ? (
                 <tr>
-                  <td colSpan={7} className="py-8 text-center text-muted">
-                    <Loader2 className="w-6 h-6 animate-spin mx-auto text-primary mb-2" />
-                    Loading itemized deductions from database...
+                  <td colSpan={7} className="py-8">
+                    <ErrorState
+                      title="Failed to Load Deductions"
+                      message={error}
+                      onRetry={fetchDeductions}
+                    />
                   </td>
                 </tr>
               ) : deductions.length === 0 ? (
                 <tr>
-                  <td colSpan={7} className="py-8 text-center text-muted">
-                    No matching deduction records found. Adjust filters or search keywords.
+                  <td colSpan={7} className="py-12">
+                    <EmptyState
+                      title="No matching deductions"
+                      description="No itemized deductions found for the selected filter."
+                    />
                   </td>
                 </tr>
               ) : (

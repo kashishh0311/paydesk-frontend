@@ -4,6 +4,7 @@ import { Button } from '../common/Button';
 import { apiRequest } from '../../services/api';
 import { showSuccessToast, showErrorToast } from '../../utils/toast';
 import { useOnClickOutside } from '../../hooks/useOnClickOutside';
+import { TableRowSkeleton, EmptyState } from '../common/Skeleton';
 import { formatCurrency } from '../../utils/currency';
 import {
   TrendingUp,
@@ -788,17 +789,15 @@ export const IncrementsBonusesTab: React.FC = () => {
                   </tr>
                 </thead>
                 <tbody className="divide-y divide-border text-foreground">
-                  {auditLoading ? (
-                    <tr>
-                      <td colSpan={7} className="py-8 text-center text-muted">
-                        <Loader2 className="w-6 h-6 animate-spin mx-auto text-primary mb-2" />
-                        Loading audit logs...
-                      </td>
-                    </tr>
+                  {auditLoading && audits.length === 0 ? (
+                    <TableRowSkeleton columns={7} rows={6} />
                   ) : audits.length === 0 ? (
                     <tr>
-                      <td colSpan={7} className="py-8 text-center text-muted">
-                        No recent salary revision events recorded. Submit a revision on the left to create an audit record.
+                      <td colSpan={7} className="py-10">
+                        <EmptyState
+                          title="No compensation revisions recorded"
+                          description="No recent salary revision events recorded. Submit a revision on the left to create an audit record."
+                        />
                       </td>
                     </tr>
                   ) : (

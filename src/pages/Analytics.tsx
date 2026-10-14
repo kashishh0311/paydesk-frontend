@@ -1,6 +1,7 @@
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useState, useCallback } from 'react';
 import { Card } from '../components/common/Card';
-import { TrendingUp, DollarSign, Globe, Loader2 } from 'lucide-react';
+import { AnalyticsSkeleton, ErrorState } from '../components/common/Skeleton';
+import { TrendingUp, DollarSign, Globe } from 'lucide-react';
 import { apiRequest } from '../services/api';
 
 interface CountryItem {
@@ -35,28 +36,41 @@ interface AnalyticsData {
 export const Analytics: React.FC = () => {
   const [data, setData] = useState<AnalyticsData | null>(null);
   const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
 
-  useEffect(() => {
-    const fetchAnalytics = async () => {
-      try {
-        const res = await apiRequest<{ success: boolean; data: AnalyticsData }>('/analytics/overview');
-        if (res.data) {
-          setData(res.data);
-        }
-      } catch (err) {
-        console.error('Failed to load analytics overview:', err);
-      } finally {
-        setLoading(false);
+  const fetchAnalytics = useCallback(async () => {
+    setLoading(true);
+    setError(null);
+    try {
+      const res = await apiRequest<{ success: boolean; data: AnalyticsData }>('/analytics/overview');
+      if (res.data) {
+        setData(res.data);
       }
-    };
-    fetchAnalytics();
+    } catch (err: unknown) {
+      const msg = err instanceof Error ? err.message : 'Failed to retrieve analytics metrics.';
+      setError(msg);
+      console.error('Failed to load analytics overview:', err);
+    } finally {
+      setLoading(false);
+    }
   }, []);
 
+  useEffect(() => {
+    fetchAnalytics();
+  }, [fetchAnalytics]);
+
   if (loading) {
+    return <AnalyticsSkeleton />;
+  }
+
+  if (error) {
     return (
-      <div className="flex flex-col items-center justify-center min-h-[400px] space-y-3">
-        <Loader2 className="w-8 h-8 animate-spin text-primary" />
-        <p className="text-xs text-muted">Calculating compensation aggregations across workforce records...</p>
+      <div className="w-full py-8 space-y-4">
+        <ErrorState
+          title="Failed to Load Analytics"
+          message={error}
+          onRetry={fetchAnalytics}
+        />
       </div>
     );
   }

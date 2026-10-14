@@ -15,18 +15,15 @@ import { Salaries } from './pages/Salaries';
 import { Analytics } from './pages/Analytics';
 import { AuditLogs } from './pages/AuditLogs';
 import { AIAssistant } from './pages/AIAssistant';
+import { NotFound } from './pages/NotFound';
 import { ErrorBoundary } from './components/common/ErrorBoundary';
-import { Loader2 } from 'lucide-react';
+import { AppShellSkeleton } from './components/common/Skeleton';
 
 function ProtectedRoute({ children }: { children: React.ReactNode }) {
   const { currentUser, isInitialLoading } = useAppSelector((state) => state.user);
 
   if (isInitialLoading) {
-    return (
-      <div className="min-h-screen flex items-center justify-center bg-background text-foreground">
-        <Loader2 className="w-8 h-8 animate-spin text-primary" />
-      </div>
-    );
+    return <AppShellSkeleton />;
   }
 
   if (!currentUser) {
@@ -40,11 +37,7 @@ function PublicRoute({ children }: { children: React.ReactNode }) {
   const { currentUser, isInitialLoading } = useAppSelector((state) => state.user);
 
   if (isInitialLoading) {
-    return (
-      <div className="min-h-screen flex items-center justify-center bg-background text-foreground">
-        <Loader2 className="w-8 h-8 animate-spin text-primary" />
-      </div>
-    );
+    return <AppShellSkeleton />;
   }
 
   if (currentUser) {
@@ -52,6 +45,20 @@ function PublicRoute({ children }: { children: React.ReactNode }) {
   }
 
   return <>{children}</>;
+}
+
+function CatchAllRoute() {
+  const { currentUser, isInitialLoading } = useAppSelector((state) => state.user);
+
+  if (isInitialLoading) {
+    return <AppShellSkeleton />;
+  }
+
+  if (!currentUser) {
+    return <Navigate to="/login" replace />;
+  }
+
+  return <NotFound />;
 }
 
 function AppContent() {
@@ -65,6 +72,7 @@ function AppContent() {
   return (
     <BrowserRouter>
       <Routes>
+        {/* Public Login Route */}
         <Route
           path="/login"
           element={
@@ -74,6 +82,7 @@ function AppContent() {
           }
         />
 
+        {/* Protected Dashboard & App Routes */}
         <Route
           path="/"
           element={
@@ -89,9 +98,12 @@ function AppContent() {
           <Route path="analytics" element={<Analytics />} />
           <Route path="audit-logs" element={<AuditLogs />} />
           <Route path="ai-assistant" element={<AIAssistant />} />
+          {/* If a logged-in user accesses an undefined route inside layout */}
+          <Route path="*" element={<NotFound />} />
         </Route>
 
-        <Route path="*" element={<Navigate to="/dashboard" replace />} />
+        {/* Global Fallback: redirects to /login if unauthenticated, shows NotFound if authenticated */}
+        <Route path="*" element={<CatchAllRoute />} />
       </Routes>
       <ToastContainer
         position="bottom-center"

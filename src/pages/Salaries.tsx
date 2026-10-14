@@ -28,6 +28,7 @@ import { useDebounce } from '../hooks/useDebounce';
 import { useOnClickOutside } from '../hooks/useOnClickOutside';
 import { formatINR, formatCurrency } from '../utils/currency';
 import { downloadExport } from '../utils/download';
+import { TableRowSkeleton, EmptyState, ErrorState } from '../components/common/Skeleton';
 
 import { SalaryStructureTab } from '../components/salary/SalaryStructureTab';
 import { DeductionsLopTab } from '../components/salary/DeductionsLopTab';
@@ -82,6 +83,7 @@ export const Salaries: React.FC = () => {
 
   const [salaries, setSalaries] = useState<SalaryRow[]>([]);
   const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
   const [search, setSearch] = useState('');
   const [department, setDepartment] = useState('');
   const [selectedMonth, setSelectedMonth] = useState('2026-10');
@@ -134,6 +136,7 @@ export const Salaries: React.FC = () => {
 
   const fetchSalaries = useCallback(async () => {
     setLoading(true);
+    setError(null);
     try {
       const queryParams = new URLSearchParams({
         page: String(page),
@@ -167,7 +170,9 @@ export const Salaries: React.FC = () => {
         setSalaries(mapped);
         setTotalCount(res.data.count);
       }
-    } catch {
+    } catch (err: unknown) {
+      const msg = err instanceof Error ? err.message : 'Failed to load salary records from database.';
+      setError(msg);
       showErrorToast('Failed to load salary records from database.');
       setSalaries([]);
     } finally {
@@ -407,10 +412,25 @@ export const Salaries: React.FC = () => {
                   </tr>
                 </thead>
                 <tbody className="divide-y divide-border text-foreground">
-                  {salaries.length === 0 ? (
+                  {loading && salaries.length === 0 ? (
+                    <TableRowSkeleton columns={8} rows={10} />
+                  ) : error ? (
                     <tr>
-                      <td colSpan={8} className="py-12 text-center text-sm text-muted">
-                        No salary records found for the selected criteria.
+                      <td colSpan={8} className="py-8">
+                        <ErrorState
+                          title="Failed to Load Salary Records"
+                          message={error}
+                          onRetry={fetchSalaries}
+                        />
+                      </td>
+                    </tr>
+                  ) : salaries.length === 0 ? (
+                    <tr>
+                      <td colSpan={8} className="py-12">
+                        <EmptyState
+                          title="No salary records found"
+                          description="No compensation records found for the selected month and criteria."
+                        />
                       </td>
                     </tr>
                   ) : (

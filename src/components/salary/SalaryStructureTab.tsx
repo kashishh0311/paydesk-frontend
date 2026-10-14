@@ -5,6 +5,7 @@ import { apiRequest } from '../../services/api';
 import { formatINR } from '../../utils/currency';
 import { showSuccessToast, showErrorToast } from '../../utils/toast';
 import { useOnClickOutside } from '../../hooks/useOnClickOutside';
+import { SalaryStructureSkeleton } from '../common/Skeleton';
 import {
   Layers,
   Search,
@@ -260,10 +261,7 @@ export const SalaryStructureTab: React.FC = () => {
       </div>
 
       {structureLoading ? (
-        <div className="p-12 flex flex-col items-center justify-center space-y-3">
-          <Loader2 className="w-8 h-8 animate-spin text-primary" />
-          <p className="text-xs text-muted">Loading employee salary structure from database...</p>
-        </div>
+        <SalaryStructureSkeleton />
       ) : structure ? (
         <div className="space-y-6">
           {/* Employee Badge Summary */}
