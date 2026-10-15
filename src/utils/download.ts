@@ -54,8 +54,9 @@ export const downloadExport = async (endpoint: string, defaultFilename: string):
     link.click();
     document.body.removeChild(link);
     window.URL.revokeObjectURL(url);
-  } catch (error: any) {
+  } catch (error) {
     console.error('Download export error:', error);
-    showErrorToast(error?.message || 'Failed to download export file. Please verify network access.');
+    const message = error instanceof Error ? error.message : 'Failed to download export file. Please verify network access.';
+    showErrorToast(message);
   }
 };
