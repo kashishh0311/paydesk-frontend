@@ -17,7 +17,8 @@ import {
   Check,
   FileSpreadsheet,
   RotateCcw,
-  Eye
+  Eye,
+  Pencil
 } from 'lucide-react';
 import { downloadExport } from '../utils/download';
 import { useDebounce } from '../hooks/useDebounce';
@@ -82,6 +83,56 @@ export const Employees: React.FC = () => {
   // Close export dropdown when clicking outside screen
   const exportDropdownRef = useRef<HTMLDivElement>(null);
   useOnClickOutside(exportDropdownRef, () => setIsExportMenuOpen(false));
+
+  // Edit Employee State & Ref
+  const [editTarget, setEditTarget] = useState<EmployeeItem | null>(null);
+  const [editFormData, setEditFormData] = useState({
+    first_name: '',
+    last_name: '',
+    email: '',
+    department: 'Engineering',
+    job_title: '',
+    country: 'United States',
+    currency: 'USD'
+  });
+  const [isEditing, setIsEditing] = useState(false);
+  const editModalRef = useRef<HTMLDivElement>(null);
+  useOnClickOutside(editModalRef, () => setEditTarget(null));
+
+  const handleOpenEdit = (emp: EmployeeItem) => {
+    setEditTarget(emp);
+    setEditFormData({
+      first_name: emp.first_name,
+      last_name: emp.last_name,
+      email: emp.email,
+      department: emp.department,
+      job_title: emp.job_title,
+      country: emp.country,
+      currency: emp.currency
+    });
+  };
+
+  const handleEditSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!editTarget) return;
+    setIsEditing(true);
+    try {
+      const res = await apiRequest<{ success: boolean; data: EmployeeItem; message: string }>(
+        `/employees/${editTarget.id}`,
+        {
+          method: 'PUT',
+          body: JSON.stringify(editFormData)
+        }
+      );
+      showSuccessToast(res.message || 'Employee updated successfully.');
+      setEditTarget(null);
+      fetchEmployees();
+    } catch (err: any) {
+      showErrorToast(err.message || 'Failed to update employee record.');
+    } finally {
+      setIsEditing(false);
+    }
+  };
 
   const handleOpenView = async (emp: EmployeeItem) => {
     setViewEmployee(emp);
@@ -417,6 +468,14 @@ export const Employees: React.FC = () => {
                         </button>
                         <button
                           type="button"
+                          onClick={() => handleOpenEdit(emp)}
+                          className="p-1.5 rounded-lg text-muted hover:text-primary hover:bg-background transition cursor-pointer"
+                          title="Edit Employee Profile"
+                        >
+                          <Pencil className="w-4 h-4" />
+                        </button>
+                        <button
+                          type="button"
                           onClick={() => setDeleteTarget(emp)}
                           className="p-1.5 rounded-lg text-muted hover:text-red-500 hover:bg-background transition cursor-pointer"
                           title="Delete Employee"
@@ -604,6 +663,142 @@ export const Employees: React.FC = () => {
         onConfirm={handleConfirmDelete}
         onCancel={() => setDeleteTarget(null)}
       />
+
+      {/* Edit Employee Modal */}
+      {editTarget && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 backdrop-blur-xs p-4 animate-in fade-in duration-150">
+          <div
+            ref={editModalRef}
+            className="w-full max-w-lg bg-card border border-border rounded-2xl p-6 shadow-2xl space-y-4 max-h-[90vh] overflow-y-auto custom-scrollbar animate-in zoom-in-95 duration-150"
+          >
+            <div className="flex items-center justify-between border-b border-border pb-3">
+              <div className="flex items-center gap-2">
+                <Pencil className="w-5 h-5 text-primary" />
+                <div>
+                  <h3 className="text-base font-bold text-foreground">Edit Employee</h3>
+                  <p className="text-xs text-muted font-mono">{editTarget.employee_code}</p>
+                </div>
+              </div>
+              <button
+                type="button"
+                onClick={() => setEditTarget(null)}
+                className="p-1 rounded-lg text-muted hover:text-foreground cursor-pointer"
+              >
+                <X className="w-4 h-4" />
+              </button>
+            </div>
+
+            <form onSubmit={handleEditSubmit} className="space-y-4">
+              <div className="grid grid-cols-2 gap-3">
+                <Input
+                  label="First Name"
+                  value={editFormData.first_name}
+                  onChange={(e) => setEditFormData({ ...editFormData, first_name: e.target.value })}
+                  required
+                />
+                <Input
+                  label="Last Name"
+                  value={editFormData.last_name}
+                  onChange={(e) => setEditFormData({ ...editFormData, last_name: e.target.value })}
+                  required
+                />
+              </div>
+
+              <Input
+                label="Email Address"
+                type="email"
+                value={editFormData.email}
+                onChange={(e) => setEditFormData({ ...editFormData, email: e.target.value })}
+                required
+              />
+
+              <div className="grid grid-cols-2 gap-3">
+                <Select
+                  label="Department"
+                  value={editFormData.department}
+                  onChange={(e) => setEditFormData({ ...editFormData, department: e.target.value })}
+                >
+                  <option value="Engineering">Engineering</option>
+                  <option value="Product">Product</option>
+                  <option value="Marketing">Marketing</option>
+                  <option value="Sales">Sales</option>
+                  <option value="Human Resources">Human Resources</option>
+                  <option value="Finance">Finance</option>
+                  <option value="Operations">Operations</option>
+                </Select>
+                <Input
+                  label="Job Title"
+                  value={editFormData.job_title}
+                  onChange={(e) => setEditFormData({ ...editFormData, job_title: e.target.value })}
+                  required
+                />
+              </div>
+
+              <div className="grid grid-cols-2 gap-3">
+                <Select
+                  label="Country"
+                  value={editFormData.country}
+                  onChange={(e) => {
+                    const c = e.target.value;
+                    const currencies: Record<string, string> = {
+                      'United States': 'USD',
+                      'United Kingdom': 'GBP',
+                      'Germany': 'EUR',
+                      'India': 'INR',
+                      'Singapore': 'SGD',
+                      'Japan': 'JPY',
+                      'Canada': 'CAD',
+                      'Australia': 'AUD'
+                    };
+                    setEditFormData({
+                      ...editFormData,
+                      country: c,
+                      currency: currencies[c] || 'USD'
+                    });
+                  }}
+                >
+                  <option value="United States">United States (USD)</option>
+                  <option value="United Kingdom">United Kingdom (GBP)</option>
+                  <option value="Germany">Germany (EUR)</option>
+                  <option value="India">India (INR)</option>
+                  <option value="Singapore">Singapore (SGD)</option>
+                  <option value="Japan">Japan (JPY)</option>
+                  <option value="Canada">Canada (CAD)</option>
+                  <option value="Australia">Australia (AUD)</option>
+                </Select>
+
+                <Input
+                  label="Currency"
+                  value={editFormData.currency}
+                  readOnly
+                  disabled
+                  className="bg-muted/10 cursor-not-allowed font-mono"
+                />
+              </div>
+
+              <div className="flex items-center justify-end gap-2 pt-3 border-t border-border">
+                <Button
+                  type="button"
+                  variant="secondary"
+                  size="sm"
+                  onClick={() => setEditTarget(null)}
+                >
+                  Cancel
+                </Button>
+                <Button
+                  type="submit"
+                  variant="primary"
+                  size="sm"
+                  isLoading={isEditing}
+                  leftIcon={<Check className="w-4 h-4" />}
+                >
+                  Save Changes
+                </Button>
+              </div>
+            </form>
+          </div>
+        </div>
+      )}
 
       {/* View Employee Details & Salary Slips Modal */}
       {viewEmployee && (

@@ -495,7 +495,7 @@ export const DashboardSkeleton: React.FC = () => {
       {/* Row 2: Charts (Currency Regions & Recent Audit Trail) */}
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-5">
         <ChartSkeleton title="Global Currency Distribution" type="currency" />
-        <div className="p-4 sm:p-5 rounded-xl bg-card border border-border shadow-2xs flex flex-col justify-between">
+        <div className="p-4 sm:p-5 rounded-xl bg-card border border-border shadow-2xs flex flex-col">
           <div className="flex items-start justify-between mb-4 pb-2.5 border-b border-border/60">
             <div className="space-y-1">
               <Skeleton width={180} height={16} />
@@ -503,7 +503,7 @@ export const DashboardSkeleton: React.FC = () => {
             </div>
           </div>
           <table className="w-full text-left text-sm">
-            <thead className="bg-background text-muted border-b border-border uppercase tracking-wider text-xs">
+            <thead className="bg-background text-muted uppercase tracking-wider text-xs">
               <tr>
                 <th className="py-2.5 px-3"><Skeleton width={60} height={11} /></th>
                 <th className="py-2.5 px-3"><Skeleton width={50} height={11} /></th>
@@ -511,7 +511,7 @@ export const DashboardSkeleton: React.FC = () => {
                 <th className="py-2.5 px-3 text-right"><Skeleton width={50} height={11} /></th>
               </tr>
             </thead>
-            <tbody className="divide-y border-border">
+            <tbody className="text-foreground">
               <TableRowSkeleton columns={4} rows={5} />
             </tbody>
           </table>

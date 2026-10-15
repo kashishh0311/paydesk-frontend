@@ -30,14 +30,86 @@ interface LogItem {
 interface RawAuditLog {
   id: number;
   action: string;
-  previous_value: { net_salary?: number; base_salary?: number; name?: string } | null;
-  new_value: { net_salary?: number; base_salary?: number; name?: string; deleted?: boolean } | null;
+  previous_value: Record<string, any> | null;
+  new_value: Record<string, any> | null;
   reason: string;
   created_at?: string;
   createdAt?: string;
   user?: { name: string; email: string };
   employee?: { employee_code: string; currency: string };
 }
+
+const formatAuditValues = (
+  action: string,
+  prev: Record<string, any> | null,
+  curr: Record<string, any> | null,
+  currency: string
+): { prev: string; new: string } => {
+  if (curr?.deleted) {
+    return {
+      prev: prev?.name || 'Active Profile',
+      new: 'Deleted'
+    };
+  }
+
+  if (curr?.net_salary != null) {
+    return {
+      prev: prev?.net_salary != null ? `${currency} ${Number(prev.net_salary).toLocaleString()}` : 'None',
+      new: `${currency} ${Number(curr.net_salary).toLocaleString()}`
+    };
+  }
+
+  if (curr?.base_salary != null && !curr?.first_name) {
+    return {
+      prev: prev?.base_salary != null ? `${currency} ${Number(prev.base_salary).toLocaleString()}` : 'None',
+      new: `${currency} ${Number(curr.base_salary).toLocaleString()}`
+    };
+  }
+
+  // Employee Profile Updates
+  if (action === 'EMPLOYEE_UPDATED' || curr?.department || curr?.job_title || curr?.first_name) {
+    const changes: string[] = [];
+    const prevChanges: string[] = [];
+
+    if (prev?.department !== curr?.department && curr?.department) {
+      prevChanges.push(`Dept: ${prev?.department || 'N/A'}`);
+      changes.push(`Dept: ${curr.department}`);
+    }
+    if (prev?.job_title !== curr?.job_title && curr?.job_title) {
+      prevChanges.push(`Title: ${prev?.job_title || 'N/A'}`);
+      changes.push(`Title: ${curr.job_title}`);
+    }
+    if (prev?.email !== curr?.email && curr?.email) {
+      prevChanges.push(prev?.email || 'N/A');
+      changes.push(curr.email);
+    }
+    const prevFullName = `${prev?.first_name || ''} ${prev?.last_name || ''}`.trim();
+    const currFullName = `${curr?.first_name || ''} ${curr?.last_name || ''}`.trim();
+    if (prevFullName !== currFullName && currFullName) {
+      prevChanges.push(prevFullName || 'N/A');
+      changes.push(currFullName);
+    }
+
+    if (changes.length > 0) {
+      return {
+        prev: prevChanges.join(' • '),
+        new: changes.join(' • ')
+      };
+    }
+
+    if (currFullName) {
+      return {
+        prev: prevFullName ? `Prior: ${prevFullName}` : 'Original Profile',
+        new: `Updated: ${currFullName}`
+      };
+    }
+  }
+
+  return {
+    prev: prev?.name ? `Created: ${prev.name}` : 'None',
+    new: curr?.name ? `Created: ${curr.name}` : 'Recorded'
+  };
+};
 
 export const AuditLogs: React.FC = () => {
   const [logs, setLogs] = useState<LogItem[]>([]);
@@ -69,12 +141,12 @@ export const AuditLogs: React.FC = () => {
       if (res.data?.rows) {
         const mapped: LogItem[] = res.data.rows.map((r) => {
           const currency = r.employee?.currency || '$';
-          const prevStr = r.previous_value?.net_salary != null
-            ? `${currency} ${Number(r.previous_value.net_salary).toLocaleString()}`
-            : r.previous_value?.name ? `Created: ${r.previous_value.name}` : 'None';
-          const newStr = r.new_value?.net_salary != null
-            ? `${currency} ${Number(r.new_value.net_salary).toLocaleString()}`
-            : r.new_value?.deleted ? 'Deleted' : 'Recorded';
+          const { prev: prevStr, new: newStr } = formatAuditValues(
+            r.action,
+            r.previous_value,
+            r.new_value,
+            currency
+          );
 
           const rawDate = r.createdAt || r.created_at;
           let formattedTime = 'Just now';
@@ -224,7 +296,13 @@ export const AuditLogs: React.FC = () => {
                     <td className="py-3 px-3.5 font-medium">{log.user}</td>
                     <td className="py-3 px-3.5 font-mono font-semibold text-primary">{log.employeeCode}</td>
                     <td className="py-3 px-3.5">
-                      <span className="inline-flex items-center px-2 py-0.5 rounded-md text-xs font-semibold bg-primary/10 text-primary border border-primary/20">
+                      <span className={`inline-flex items-center px-2 py-0.5 rounded-md text-xs font-semibold ${
+                        log.action.includes('UPDATED') || log.action.includes('REVISED')
+                          ? 'bg-blue-500/10 text-blue-600 dark:text-blue-400 border border-blue-500/20'
+                          : log.action.includes('DELETED')
+                          ? 'bg-rose-500/10 text-rose-600 dark:text-rose-400 border border-rose-500/20'
+                          : 'bg-primary/10 text-primary border border-primary/20'
+                      }`}>
                         {log.action}
                       </span>
                     </td>
