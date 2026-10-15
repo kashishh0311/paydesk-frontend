@@ -1,4 +1,4 @@
-import { showErrorToast } from './toast';
+import { showErrorToast, showInfoToast, showSuccessToast } from './toast';
 import { API_BASE_URL } from '../services/api';
 
 /**
@@ -7,6 +7,7 @@ import { API_BASE_URL } from '../services/api';
  */
 export const downloadExport = async (endpoint: string, defaultFilename: string): Promise<void> => {
   try {
+    showInfoToast('Preparing your export... Download will begin shortly.');
     const baseUrl = API_BASE_URL;
     const token = typeof window !== 'undefined' ? localStorage.getItem('paydesk_token') : null;
     const headers: Record<string, string> = {};
@@ -54,6 +55,7 @@ export const downloadExport = async (endpoint: string, defaultFilename: string):
     link.click();
     document.body.removeChild(link);
     window.URL.revokeObjectURL(url);
+    showSuccessToast('Export downloaded successfully.');
   } catch (error) {
     console.error('Download export error:', error);
     const message = error instanceof Error ? error.message : 'Failed to download export file. Please verify network access.';
