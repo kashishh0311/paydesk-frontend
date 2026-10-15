@@ -221,9 +221,9 @@ export const DashboardLayout: React.FC = () => {
       </aside>
 
       {/* Main Container */}
-      <div className="flex-1 lg:pl-64 flex flex-col min-h-screen">
+      <div className="flex-1 min-w-0 max-w-full lg:pl-64 flex flex-col min-h-screen pt-16 overflow-x-hidden">
         {/* Sticky Header */}
-        <header className="sticky top-0 z-30 h-16 bg-card/90 backdrop-blur-md border-b border-border px-4 lg:px-[30px] flex items-center justify-between transition-colors">
+        <header className="fixed top-0 right-0 left-0 lg:left-64 z-30 h-16 bg-card/90 backdrop-blur-md border-b border-border px-4 lg:px-[30px] flex items-center justify-between transition-colors">
           <div className="flex items-center gap-3">
             <button
               onClick={() => setIsMobileOpen(true)}
@@ -266,7 +266,7 @@ export const DashboardLayout: React.FC = () => {
         </header>
 
         {/* Page Content Body */}
-        <main className="flex-1 px-4 lg:px-[30px] py-4 lg:py-[30px] w-full flex flex-col">
+        <main className="flex-1 min-w-0 w-full max-w-full px-4 lg:px-[30px] py-4 lg:py-[30px] flex flex-col overflow-x-hidden">
           <Outlet />
         </main>
       </div>

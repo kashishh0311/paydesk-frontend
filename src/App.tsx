@@ -15,20 +15,17 @@ import { Salaries } from './pages/Salaries';
 import { Analytics } from './pages/Analytics';
 import { AuditLogs } from './pages/AuditLogs';
 import { AIAssistant } from './pages/AIAssistant';
+import { NotFound } from './pages/NotFound';
 import { ErrorBoundary } from './components/common/ErrorBoundary';
 import { LoginSkeleton } from './components/common/LoginSkeleton';
-import { Loader2 } from 'lucide-react';
+import { AppShellSkeleton } from './components/common/Skeleton';
 
 function ProtectedRoute({ children }: { children: React.ReactNode }) {
   const { currentUser, isInitialLoading } = useAppSelector((state) => state.user);
   const hasToken = typeof window !== 'undefined' ? Boolean(localStorage.getItem('paydesk_token')) : false;
 
   if (isInitialLoading && hasToken) {
-    return (
-      <div className="min-h-screen flex items-center justify-center bg-background text-foreground">
-        <Loader2 className="w-8 h-8 animate-spin text-primary" />
-      </div>
-    );
+    return <AppShellSkeleton />;
   }
 
   if (!currentUser) {
@@ -62,6 +59,20 @@ function RootRedirect() {
   return <Navigate to="/login" replace />;
 }
 
+function CatchAllRoute() {
+  const { currentUser, isInitialLoading } = useAppSelector((state) => state.user);
+
+  if (isInitialLoading) {
+    return <AppShellSkeleton />;
+  }
+
+  if (!currentUser) {
+    return <Navigate to="/login" replace />;
+  }
+
+  return <NotFound />;
+}
+
 function AppContent() {
   const dispatch = useAppDispatch();
   const { theme } = useTheme();
@@ -73,6 +84,7 @@ function AppContent() {
   return (
     <BrowserRouter>
       <Routes>
+        {/* Public Login Route */}
         <Route
           path="/login"
           element={
@@ -82,6 +94,7 @@ function AppContent() {
           }
         />
 
+        {/* Protected Dashboard & App Routes */}
         <Route
           path="/"
           element={
@@ -97,9 +110,12 @@ function AppContent() {
           <Route path="analytics" element={<Analytics />} />
           <Route path="audit-logs" element={<AuditLogs />} />
           <Route path="ai-assistant" element={<AIAssistant />} />
+          {/* If a logged-in user accesses an undefined route inside layout */}
+          <Route path="*" element={<NotFound />} />
         </Route>
 
-        <Route path="*" element={<RootRedirect />} />
+        {/* Global Fallback: redirects to /login if unauthenticated, shows NotFound if authenticated */}
+        <Route path="*" element={<CatchAllRoute />} />
       </Routes>
       <ToastContainer
         position="bottom-center"

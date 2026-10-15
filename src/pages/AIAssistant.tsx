@@ -3,6 +3,7 @@ import { Button } from '../components/common/Button';
 import { Sparkles, Send, Bot, User as UserIcon } from 'lucide-react';
 import { apiRequest } from '../services/api';
 import { showErrorToast } from '../utils/toast';
+import { AIAssistantMessageSkeleton } from '../components/common/Skeleton';
 
 interface Message {
   role: 'user' | 'assistant';
@@ -268,14 +269,7 @@ export const AIAssistant: React.FC = () => {
             </div>
           ))}
 
-          {loading && (
-            <div className="flex items-center gap-3 text-xs sm:text-sm text-muted p-2">
-              <div className="w-8 h-8 rounded-xl bg-primary/10 text-primary flex items-center justify-center shrink-0 animate-pulse">
-                <Bot className="w-4 h-4" />
-              </div>
-              <span>PayDesk AI is evaluating verified database records...</span>
-            </div>
-          )}
+          {loading && <AIAssistantMessageSkeleton />}
         </div>
 
         {/* Fixed Message Input Bar at the Bottom */}

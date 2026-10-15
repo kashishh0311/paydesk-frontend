@@ -1,5 +1,6 @@
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useState, useCallback } from 'react';
 import { Card } from '../components/common/Card';
+import { DashboardSkeleton, ErrorState, EmptyState } from '../components/common/Skeleton';
 import { apiRequest } from '../services/api';
 import {
   Users,
@@ -7,7 +8,6 @@ import {
   Wallet,
   ArrowUpRight,
   CheckCircle2,
-  Loader2,
   Clock,
   ShieldAlert,
   CreditCard
@@ -53,66 +53,79 @@ export const Dashboard: React.FC = () => {
   const [stats, setStats] = useState<StatsOverview | null>(null);
   const [recentAudits, setRecentAudits] = useState<RecentAuditItem[]>([]);
   const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
 
-  useEffect(() => {
-    const fetchDashboardData = async () => {
-      try {
-        const [overviewRes, auditRes] = await Promise.all([
-          apiRequest<{ success: boolean; data: StatsOverview }>('/analytics/overview'),
-          apiRequest<{
-            success: boolean;
-            data: {
-              rows: Array<{
-                id: number;
-                action: string;
-                reason: string;
-                created_at?: string;
-                createdAt?: string;
-                employee?: { employee_code: string };
-              }>;
-            };
-          }>('/audit-logs?limit=5')
-        ]);
+  const fetchDashboardData = useCallback(async () => {
+    setLoading(true);
+    setError(null);
+    try {
+      const [overviewRes, auditRes] = await Promise.all([
+        apiRequest<{ success: boolean; data: StatsOverview }>('/analytics/overview'),
+        apiRequest<{
+          success: boolean;
+          data: {
+            rows: Array<{
+              id: number;
+              action: string;
+              reason: string;
+              created_at?: string;
+              createdAt?: string;
+              employee?: { employee_code: string };
+            }>;
+          };
+        }>('/audit-logs?limit=5')
+      ]);
 
-        if (overviewRes.data) {
-          setStats(overviewRes.data);
-        }
-
-        if (auditRes.data?.rows) {
-          const mapped: RecentAuditItem[] = auditRes.data.rows.map((r) => {
-            const rawDate = r.createdAt || r.created_at;
-            let formattedDate = 'Today';
-            if (rawDate) {
-              const parsed = new Date(rawDate);
-              if (!isNaN(parsed.getTime())) {
-                formattedDate = parsed.toLocaleDateString();
-              }
-            }
-            return {
-              id: r.id,
-              employee_code: r.employee?.employee_code || 'EMP-SYSTEM',
-              action: r.action,
-              reason: r.reason,
-              date: formattedDate,
-              status: 'Applied'
-            };
-          });
-          setRecentAudits(mapped);
-        }
-      } catch (err) {
-        console.error('Failed to load dashboard data:', err);
-      } finally {
-        setLoading(false);
+      if (overviewRes.data) {
+        setStats(overviewRes.data);
       }
-    };
-    fetchDashboardData();
+
+      if (auditRes.data?.rows) {
+        const mapped: RecentAuditItem[] = auditRes.data.rows.map((r) => {
+          const rawDate = r.createdAt || r.created_at;
+          let formattedDate = 'Today';
+          if (rawDate) {
+            const parsed = new Date(rawDate);
+            if (!isNaN(parsed.getTime())) {
+              formattedDate = parsed.toLocaleDateString();
+            }
+          }
+          return {
+            id: r.id,
+            employee_code: r.employee?.employee_code || 'EMP-SYSTEM',
+            action: r.action,
+            reason: r.reason,
+            date: formattedDate,
+            status: 'Applied'
+          };
+        });
+        setRecentAudits(mapped);
+      }
+    } catch (err: unknown) {
+      const msg = err instanceof Error ? err.message : 'Failed to retrieve live dashboard metrics.';
+      setError(msg);
+      console.error('Failed to load dashboard data:', err);
+    } finally {
+      setLoading(false);
+    }
   }, []);
 
+  useEffect(() => {
+    fetchDashboardData();
+  }, [fetchDashboardData]);
+
   if (loading) {
+    return <DashboardSkeleton />;
+  }
+
+  if (error) {
     return (
-      <div className="flex flex-col items-center justify-center min-h-[400px] space-y-3">
-        <Loader2 className="w-8 h-8 animate-spin text-primary" />
-        <p className="text-xs text-muted">Loading live dashboard metrics from database...</p>
+      <div className="w-full py-8 space-y-4">
+        <ErrorState
+          title="Failed to Load Dashboard Metrics"
+          message={error}
+          onRetry={fetchDashboardData}
+        />
       </div>
     );
   }
@@ -132,8 +145,8 @@ export const Dashboard: React.FC = () => {
       value: stats?.monthlyPayroll
         ? formatINR(stats.monthlyPayroll)
         : stats?.totalPayrollBudget
-        ? formatINR(stats.totalPayrollBudget * 0.085)
-        : formatINR(0),
+          ? formatINR(stats.totalPayrollBudget * 0.085)
+          : formatINR(0),
       change: 'Gross compensation calculation',
       icon: Banknote,
       color: 'text-emerald-500',
@@ -200,7 +213,7 @@ export const Dashboard: React.FC = () => {
       </div>
 
       {/* 6 Summary KPI Cards Grid */}
-      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-6 gap-3">
+      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-3 2xl:grid-cols-6 gap-3.5">
         {kpiCards.map((kpi, idx) => {
           const Icon = kpi.icon;
           return (
@@ -215,7 +228,7 @@ export const Dashboard: React.FC = () => {
                 </div>
               </div>
               <div className="mt-2">
-                <h3 className="text-lg font-bold tracking-tight text-foreground font-mono">{kpi.value}</h3>
+                <h3 className="text-md font-bold tracking-tight text-foreground font-mono">{kpi.value}</h3>
                 <p className="text-[10px] text-muted mt-0.5 flex items-center gap-1 truncate">
                   <ArrowUpRight className="w-3 h-3 text-emerald-500 shrink-0" />
                   <span className="truncate">{kpi.change}</span>
@@ -241,8 +254,8 @@ export const Dashboard: React.FC = () => {
           subtitle="Live compliance audit tracking from database"
           className="h-full flex flex-col"
         >
-          <div className="max-h-[300px] overflow-y-auto overflow-x-auto custom-scrollbar">
-            <table className="w-full text-left text-sm">
+          <div className="table-slider max-h-[300px] overflow-y-auto custom-scrollbar">
+            <table className="w-full text-left text-sm min-w-[360px] md:min-w-0">
               <thead className="bg-background text-muted border-b border-border uppercase tracking-wider text-xs sticky top-0 z-10">
                 <tr>
                   <th className="py-2.5 px-3">Employee</th>
@@ -255,7 +268,10 @@ export const Dashboard: React.FC = () => {
                 {recentAudits.length === 0 ? (
                   <tr>
                     <td colSpan={4} className="py-8 text-center text-xs text-muted">
-                      No recent compensation revisions recorded yet.
+                      <EmptyState
+                        title="No recent compensation revisions"
+                        description="No compliance audit tracking recorded yet."
+                      />
                     </td>
                   </tr>
                 ) : (

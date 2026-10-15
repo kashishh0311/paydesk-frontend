@@ -4,6 +4,7 @@ import { apiRequest, API_BASE_URL } from '../../services/api';
 import { formatCurrency } from '../../utils/currency';
 import { showSuccessToast, showErrorToast } from '../../utils/toast';
 import { useOnClickOutside } from '../../hooks/useOnClickOutside';
+import { SalarySlipsHistorySkeleton } from '../common/Skeleton';
 import {
   FileText,
   Search,
@@ -180,7 +181,7 @@ export const SalarySlipsTab: React.FC = () => {
       const token = typeof window !== 'undefined'
         ? (localStorage.getItem('paydesk_token') || localStorage.getItem('token') || '')
         : '';
-      const baseUrl = API_BASE_URL;
+      const baseUrl = import.meta.env.VITE_API_BASE_URL || import.meta.env.VITE_API_URL || '';
       const response = await fetch(`${baseUrl}/payroll/payslip/${run.id}/download`, {
         headers: {
           Authorization: token ? `Bearer ${token}` : ''
@@ -339,10 +340,7 @@ export const SalarySlipsTab: React.FC = () => {
 
       {/* History & Payslips Presentation */}
       {historyLoading ? (
-        <div className="p-12 flex flex-col items-center justify-center space-y-3">
-          <Loader2 className="w-8 h-8 animate-spin text-primary" />
-          <p className="text-xs text-muted">Retrieving chronological compensation history and salary slips...</p>
-        </div>
+        <SalarySlipsHistorySkeleton />
       ) : historyData ? (
         <div className="space-y-6">
           {/* Employee Identity Card */}
@@ -685,22 +683,20 @@ export const SalarySlipsTab: React.FC = () => {
                           setDeductionName('');
                           setDeductionAmount('');
                         }}
-                        className={`px-3 py-1 text-xs font-semibold rounded-md transition cursor-pointer ${
-                          !hasOtherDeduction
-                            ? 'bg-muted/30 text-foreground font-bold shadow-2xs'
-                            : 'text-muted hover:text-foreground'
-                        }`}
+                        className={`px-3 py-1 text-xs font-semibold rounded-md transition cursor-pointer ${!hasOtherDeduction
+                          ? 'bg-muted/30 text-foreground font-bold shadow-2xs'
+                          : 'text-muted hover:text-foreground'
+                          }`}
                       >
                         No
                       </button>
                       <button
                         type="button"
                         onClick={() => setHasOtherDeduction(true)}
-                        className={`px-3 py-1 text-xs font-semibold rounded-md transition cursor-pointer ${
-                          hasOtherDeduction
-                            ? 'bg-primary text-white shadow-2xs'
-                            : 'text-muted hover:text-foreground'
-                        }`}
+                        className={`px-3 py-1 text-xs font-semibold rounded-md transition cursor-pointer ${hasOtherDeduction
+                          ? 'bg-primary text-white shadow-2xs'
+                          : 'text-muted hover:text-foreground'
+                          }`}
                       >
                         Yes
                       </button>

@@ -4,6 +4,7 @@ import { Button } from '../common/Button';
 import { apiRequest } from '../../services/api';
 import { useOnClickOutside } from '../../hooks/useOnClickOutside';
 import { formatINR } from '../../utils/currency';
+import { TableRowSkeleton, EmptyState } from '../common/Skeleton';
 import {
   Calendar,
   Calculator,
@@ -455,17 +456,15 @@ export const PayrollProcessingTab: React.FC = () => {
               </tr>
             </thead>
             <tbody className="divide-y divide-border text-foreground">
-              {loading ? (
-                <tr>
-                  <td colSpan={9} className="py-8 text-center text-muted">
-                    <Loader2 className="w-6 h-6 animate-spin mx-auto text-primary mb-2" />
-                    Loading payroll records...
-                  </td>
-                </tr>
+              {loading && records.length === 0 ? (
+                <TableRowSkeleton columns={9} rows={8} />
               ) : records.length === 0 ? (
                 <tr>
-                  <td colSpan={9} className="py-8 text-center text-muted">
-                    No payroll records generated for {selectedMonth} {selectedYear} yet. Click "Run Payroll Calculation" to process this cycle.
+                  <td colSpan={9} className="py-12">
+                    <EmptyState
+                      title="No payroll records generated yet"
+                      description={`No payroll records generated for ${selectedMonth} ${selectedYear} yet. Click "Run Payroll Calculation" to process this cycle.`}
+                    />
                   </td>
                 </tr>
               ) : (
@@ -497,7 +496,7 @@ export const PayrollProcessingTab: React.FC = () => {
                     </td>
                     <td className="py-2.5 px-3 text-right">
                       <a
-                        href={`http://localhost:5000/api/v1/payroll/payslip/${r.id}/html`}
+                        href={`/payroll/payslip/${r.id}/html`}
                         target="_blank"
                         rel="noreferrer"
                         className="inline-flex items-center gap-1 px-2 py-1 rounded-md bg-background border border-border hover:bg-card text-primary font-semibold text-[11px] transition"

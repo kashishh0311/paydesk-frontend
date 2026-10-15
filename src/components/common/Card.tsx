@@ -16,7 +16,7 @@ export const Card: React.FC<CardProps> = ({
   className = '',
 }) => {
   return (
-    <div className={`bg-card border border-border text-foreground rounded-xl p-4 sm:p-5 shadow-2xs transition-colors ${className}`}>
+    <div className={`bg-card border border-border text-foreground rounded-xl p-4 sm:p-5 shadow-2xs transition-colors w-full max-w-full min-w-0 overflow-hidden ${className}`}>
       {(title || action) && (
         <div className="flex items-start justify-between mb-3.5 pb-2.5 border-b border-border/60">
           <div>

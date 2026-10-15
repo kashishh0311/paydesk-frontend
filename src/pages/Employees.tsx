@@ -17,13 +17,13 @@ import {
   Check,
   FileSpreadsheet,
   RotateCcw,
-  Eye,
-  Loader2
+  Eye
 } from 'lucide-react';
 import { downloadExport } from '../utils/download';
 import { useDebounce } from '../hooks/useDebounce';
 import { useOnClickOutside } from '../hooks/useOnClickOutside';
 import { formatCurrency } from '../utils/currency';
+import { TableRowSkeleton, EmployeeDetailSkeleton, EmptyState, ErrorState } from '../components/common/Skeleton';
 
 interface EmployeeItem {
   id: number;
@@ -40,7 +40,8 @@ interface EmployeeItem {
 
 export const Employees: React.FC = () => {
   const [employees, setEmployees] = useState<EmployeeItem[]>([]);
-  const [loading, setLoading] = useState(false);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
   const [search, setSearch] = useState('');
   const [department, setDepartment] = useState('');
   const [country, setCountry] = useState('');
@@ -112,6 +113,7 @@ export const Employees: React.FC = () => {
 
   const fetchEmployees = useCallback(async () => {
     setLoading(true);
+    setError(null);
     try {
       const queryParams = new URLSearchParams({
         page: String(page),
@@ -127,7 +129,9 @@ export const Employees: React.FC = () => {
         setEmployees(res.data.rows);
         setTotalCount(res.data.count);
       }
-    } catch {
+    } catch (err: unknown) {
+      const msg = err instanceof Error ? err.message : 'Failed to retrieve live employee records from database.';
+      setError(msg);
       showErrorToast('Failed to retrieve live employee records from database.');
       setEmployees([]);
     } finally {
@@ -231,7 +235,7 @@ export const Employees: React.FC = () => {
               Export
             </Button>
             {isExportMenuOpen && (
-              <div className="absolute right-0 mt-2 w-48 bg-card border border-border rounded-xl shadow-xl z-30 p-1.5 space-y-1">
+              <div className="absolute left-0 sm:left-auto sm:right-0 mt-2 w-48 max-w-[calc(100vw-2rem)] bg-card border border-border rounded-xl shadow-xl z-30 p-1.5 space-y-1">
                 <button
                   onClick={() => handleExport('csv')}
                   className="w-full flex items-center gap-2 px-3 py-2 rounded-lg text-xs text-foreground hover:bg-background transition text-left"
@@ -346,8 +350,8 @@ export const Employees: React.FC = () => {
 
       {/* Data Table */}
       <Card>
-        <div className="overflow-x-auto">
-          <table className={`w-full text-left text-sm transition-opacity ${loading ? 'opacity-60' : 'opacity-100'}`}>
+        <div className="table-slider">
+          <table className={`w-full text-left text-sm min-w-[680px] xl:min-w-0 transition-opacity ${loading ? 'opacity-60' : 'opacity-100'}`}>
             <thead className="bg-background text-muted border-b border-border uppercase tracking-wider text-xs">
               <tr>
                 <th className="py-3 px-3.5">Code</th>
@@ -360,10 +364,32 @@ export const Employees: React.FC = () => {
               </tr>
             </thead>
             <tbody className="divide-y divide-border text-foreground">
-              {employees.length === 0 ? (
+              {loading && employees.length === 0 ? (
+                <TableRowSkeleton columns={7} rows={10} />
+              ) : error ? (
                 <tr>
-                  <td colSpan={7} className="py-12 text-center text-sm text-muted">
-                    No employee records matching current criteria.
+                  <td colSpan={7} className="py-8">
+                    <ErrorState
+                      title="Failed to Load Employee Records"
+                      message={error}
+                      onRetry={fetchEmployees}
+                    />
+                  </td>
+                </tr>
+              ) : employees.length === 0 ? (
+                <tr>
+                  <td colSpan={7} className="py-12">
+                    <EmptyState
+                      title="No employee records found"
+                      description="No employees match your current search and department filters."
+                      action={
+                        hasActiveFilters ? (
+                          <Button variant="outline" size="sm" onClick={handleClearFilters}>
+                            Clear Filters
+                          </Button>
+                        ) : undefined
+                      }
+                    />
                   </td>
                 </tr>
               ) : (
@@ -627,9 +653,7 @@ export const Employees: React.FC = () => {
 
             {/* Salary Information Section */}
             {viewLoading ? (
-              <div className="p-8 flex flex-col items-center justify-center space-y-2">
-                <Loader2 className="w-6 h-6 animate-spin text-primary" />
-              </div>
+              <EmployeeDetailSkeleton />
             ) : viewEmpHistory ? (
               <div className="space-y-4">
                 {(() => {

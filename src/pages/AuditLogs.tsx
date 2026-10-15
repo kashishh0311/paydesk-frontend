@@ -8,13 +8,13 @@ import {
   ChevronLeft,
   ChevronRight,
   Download,
-  Loader2,
   RotateCcw
 } from 'lucide-react';
 import { apiRequest } from '../services/api';
 import { showErrorToast } from '../utils/toast';
 import { downloadExport } from '../utils/download';
 import { useDebounce } from '../hooks/useDebounce';
+import { TableRowSkeleton, EmptyState, ErrorState } from '../components/common/Skeleton';
 
 interface LogItem {
   id: number;
@@ -42,6 +42,7 @@ interface RawAuditLog {
 export const AuditLogs: React.FC = () => {
   const [logs, setLogs] = useState<LogItem[]>([]);
   const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
   const [search, setSearch] = useState('');
   const [page, setPage] = useState(1);
   const [totalCount, setTotalCount] = useState(0);
@@ -55,6 +56,7 @@ export const AuditLogs: React.FC = () => {
 
   const fetchAuditLogs = useCallback(async () => {
     setLoading(true);
+    setError(null);
     try {
       const queryParams = new URLSearchParams({
         page: String(page),
@@ -97,7 +99,9 @@ export const AuditLogs: React.FC = () => {
         setLogs(mapped);
         setTotalCount(res.data.count || mapped.length);
       }
-    } catch {
+    } catch (err: unknown) {
+      const msg = err instanceof Error ? err.message : 'Failed to retrieve compliance audit logs from database.';
+      setError(msg);
       showErrorToast('Failed to retrieve compliance audit logs from database.');
       setLogs([]);
     } finally {
@@ -177,8 +181,8 @@ export const AuditLogs: React.FC = () => {
 
       {/* Audit Table */}
       <Card>
-        <div className="overflow-x-auto">
-          <table className={`w-full text-left text-sm transition-opacity ${loading ? 'opacity-60' : 'opacity-100'}`}>
+        <div className="table-slider">
+          <table className={`w-full text-left text-sm min-w-[780px] 2xl:min-w-0 transition-opacity ${loading ? 'opacity-60' : 'opacity-100'}`}>
             <thead className="bg-background text-muted border-b border-border uppercase tracking-wider text-xs">
               <tr>
                 <th className="py-3 px-3.5">Log ID</th>
@@ -193,16 +197,24 @@ export const AuditLogs: React.FC = () => {
             </thead>
             <tbody className="divide-y divide-border text-foreground">
               {loading && logs.length === 0 ? (
+                <TableRowSkeleton columns={8} rows={10} />
+              ) : error ? (
                 <tr>
-                  <td colSpan={8} className="py-12 text-center text-sm text-muted">
-                    <Loader2 className="w-6 h-6 animate-spin mx-auto mb-2 text-primary" />
-                    Querying compliance audit records from database...
+                  <td colSpan={8} className="py-8">
+                    <ErrorState
+                      title="Failed to Load Audit Logs"
+                      message={error}
+                      onRetry={fetchAuditLogs}
+                    />
                   </td>
                 </tr>
               ) : logs.length === 0 ? (
                 <tr>
-                  <td colSpan={8} className="py-12 text-center text-sm text-muted">
-                    No compliance logs found in database for this query.
+                  <td colSpan={8} className="py-12">
+                    <EmptyState
+                      title="No compliance logs found"
+                      description="No audit trail entries matched the specified query."
+                    />
                   </td>
                 </tr>
               ) : (
