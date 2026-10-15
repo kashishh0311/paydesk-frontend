@@ -100,9 +100,9 @@ export const AuditLogs: React.FC = () => {
         setTotalCount(res.data.count || mapped.length);
       }
     } catch (err: unknown) {
-      const msg = err instanceof Error ? err.message : 'Failed to retrieve compliance audit logs from database.';
+      const msg = err instanceof Error ? err.message : 'Failed to retrieve compliance audit logs.';
       setError(msg);
-      showErrorToast('Failed to retrieve compliance audit logs from database.');
+      showErrorToast('Failed to retrieve compliance audit logs.');
       setLogs([]);
     } finally {
       setLoading(false);

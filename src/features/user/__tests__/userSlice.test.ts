@@ -6,7 +6,7 @@ describe('userSlice Redux Unit Tests', () => {
   const initialTestState: UserState = {
     currentUser: null,
     isLoading: false,
-    isInitialLoading: true,
+    isInitialLoading: false,
     error: null,
   };
 
@@ -14,7 +14,7 @@ describe('userSlice Redux Unit Tests', () => {
     expect(userReducer(undefined, { type: 'unknown' })).toEqual({
       currentUser: null,
       isLoading: false,
-      isInitialLoading: true,
+      isInitialLoading: false,
       error: null,
     });
   });

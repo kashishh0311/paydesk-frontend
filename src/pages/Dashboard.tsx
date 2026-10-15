@@ -246,7 +246,7 @@ export const Dashboard: React.FC = () => {
 
         <Card
           title="Recent Compensation Actions"
-          subtitle="Live compliance audit tracking from database"
+          subtitle="Live compliance audit tracking"
           className="h-full flex flex-col"
         >
           <div className="table-slider max-h-[300px] overflow-y-auto custom-scrollbar">

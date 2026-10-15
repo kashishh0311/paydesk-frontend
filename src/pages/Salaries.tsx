@@ -171,9 +171,9 @@ export const Salaries: React.FC = () => {
         setTotalCount(res.data.count);
       }
     } catch (err: unknown) {
-      const msg = err instanceof Error ? err.message : 'Failed to load salary records from database.';
+      const msg = err instanceof Error ? err.message : 'Failed to load salary records.';
       setError(msg);
-      showErrorToast('Failed to load salary records from database.');
+      showErrorToast('Failed to load salary records.');
       setSalaries([]);
     } finally {
       setLoading(false);

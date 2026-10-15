@@ -130,9 +130,9 @@ export const Employees: React.FC = () => {
         setTotalCount(res.data.count);
       }
     } catch (err: unknown) {
-      const msg = err instanceof Error ? err.message : 'Failed to retrieve live employee records from database.';
+      const msg = err instanceof Error ? err.message : 'Failed to retrieve live employee records.';
       setError(msg);
-      showErrorToast('Failed to retrieve live employee records from database.');
+      showErrorToast('Failed to retrieve live employee records.');
       setEmployees([]);
     } finally {
       setLoading(false);
