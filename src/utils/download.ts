@@ -1,4 +1,5 @@
 import { showErrorToast } from './toast';
+import { API_BASE_URL } from '../services/api';
 
 /**
  * Clean in-app authenticated file export helper
@@ -6,7 +7,7 @@ import { showErrorToast } from './toast';
  */
 export const downloadExport = async (endpoint: string, defaultFilename: string): Promise<void> => {
   try {
-    const baseUrl = import.meta.env.VITE_API_URL || 'http://localhost:5000/api/v1';
+    const baseUrl = API_BASE_URL;
     const token = typeof window !== 'undefined' ? localStorage.getItem('paydesk_token') : null;
     const headers: Record<string, string> = {};
     if (token) {

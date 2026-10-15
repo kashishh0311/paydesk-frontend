@@ -229,7 +229,7 @@ export const Dashboard: React.FC = () => {
       {/* Row 1: Side-by-Side Charts (Monthly Trend & Department Breakdown) */}
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-5">
         <PayrollTrendChart data={stats?.monthlyTrends || []} />
-        <DepartmentBarChart data={stats?.departmentBreakdown || []} />  
+        <DepartmentBarChart data={stats?.departmentBreakdown || []} />
       </div>
 
       {/* Row 2: Side-by-Side (Currency Regions & Recent Audit Trail) */}
@@ -251,7 +251,7 @@ export const Dashboard: React.FC = () => {
                   <th className="py-2.5 px-3 text-right">Status</th>
                 </tr>
               </thead>
-              <tbody className="divide-y border-border text-foreground">
+              <tbody className="text-foreground">
                 {recentAudits.length === 0 ? (
                   <tr>
                     <td colSpan={4} className="py-8 text-center text-xs text-muted">

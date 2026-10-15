@@ -3,10 +3,12 @@ import type { PayloadAction } from '@reduxjs/toolkit';
 import type { UserState, LoginCredentials, User } from './types';
 import { userService } from './userService';
 
+const hasStoredToken = typeof window !== 'undefined' ? Boolean(localStorage.getItem('paydesk_token')) : false;
+
 const initialState: UserState = {
   currentUser: null,
   isLoading: false,
-  isInitialLoading: true,
+  isInitialLoading: hasStoredToken,
   error: null,
 };
 
@@ -28,6 +30,10 @@ export const loginUser = createAsyncThunk<User, LoginCredentials, { rejectValue:
 export const fetchCurrentUser = createAsyncThunk<User | null>(
   'user/fetchCurrent',
   async () => {
+    const token = typeof window !== 'undefined' ? localStorage.getItem('paydesk_token') : null;
+    if (!token) {
+      return null;
+    }
     return await userService.getMe();
   }
 );

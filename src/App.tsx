@@ -16,12 +16,14 @@ import { Analytics } from './pages/Analytics';
 import { AuditLogs } from './pages/AuditLogs';
 import { AIAssistant } from './pages/AIAssistant';
 import { ErrorBoundary } from './components/common/ErrorBoundary';
+import { LoginSkeleton } from './components/common/LoginSkeleton';
 import { Loader2 } from 'lucide-react';
 
 function ProtectedRoute({ children }: { children: React.ReactNode }) {
   const { currentUser, isInitialLoading } = useAppSelector((state) => state.user);
+  const hasToken = typeof window !== 'undefined' ? Boolean(localStorage.getItem('paydesk_token')) : false;
 
-  if (isInitialLoading) {
+  if (isInitialLoading && hasToken) {
     return (
       <div className="min-h-screen flex items-center justify-center bg-background text-foreground">
         <Loader2 className="w-8 h-8 animate-spin text-primary" />
@@ -40,11 +42,7 @@ function PublicRoute({ children }: { children: React.ReactNode }) {
   const { currentUser, isInitialLoading } = useAppSelector((state) => state.user);
 
   if (isInitialLoading) {
-    return (
-      <div className="min-h-screen flex items-center justify-center bg-background text-foreground">
-        <Loader2 className="w-8 h-8 animate-spin text-primary" />
-      </div>
-    );
+    return <LoginSkeleton />;
   }
 
   if (currentUser) {
@@ -52,6 +50,16 @@ function PublicRoute({ children }: { children: React.ReactNode }) {
   }
 
   return <>{children}</>;
+}
+
+function RootRedirect() {
+  const { currentUser } = useAppSelector((state) => state.user);
+  const hasToken = typeof window !== 'undefined' ? Boolean(localStorage.getItem('paydesk_token')) : false;
+
+  if (currentUser || hasToken) {
+    return <Navigate to="/dashboard" replace />;
+  }
+  return <Navigate to="/login" replace />;
 }
 
 function AppContent() {
@@ -82,7 +90,7 @@ function AppContent() {
             </ProtectedRoute>
           }
         >
-          <Route index element={<Navigate to="/dashboard" replace />} />
+          <Route index element={<RootRedirect />} />
           <Route path="dashboard" element={<Dashboard />} />
           <Route path="employees" element={<Employees />} />
           <Route path="salaries" element={<Salaries />} />
@@ -91,7 +99,7 @@ function AppContent() {
           <Route path="ai-assistant" element={<AIAssistant />} />
         </Route>
 
-        <Route path="*" element={<Navigate to="/dashboard" replace />} />
+        <Route path="*" element={<RootRedirect />} />
       </Routes>
       <ToastContainer
         position="bottom-center"

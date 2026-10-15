@@ -51,9 +51,9 @@ export const DashboardLayout: React.FC = () => {
   }, [location.pathname]);
 
   const handleLogout = async () => {
+    navigate('/login', { replace: true });
     await dispatch(logoutUser());
     showInfoToast('You have been signed out.');
-    navigate('/login');
   };
 
   const navItems = [
