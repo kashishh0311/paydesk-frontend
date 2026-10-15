@@ -1,6 +1,6 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { Card } from '../common/Card';
-import { apiRequest, API_BASE_URL } from '../../services/api';
+import { apiRequest } from '../../services/api';
 import { formatCurrency } from '../../utils/currency';
 import { showSuccessToast, showErrorToast } from '../../utils/toast';
 import { useOnClickOutside } from '../../hooks/useOnClickOutside';
@@ -181,7 +181,7 @@ export const SalarySlipsTab: React.FC = () => {
       const token = typeof window !== 'undefined'
         ? (localStorage.getItem('paydesk_token') || localStorage.getItem('token') || '')
         : '';
-      const baseUrl = import.meta.env.VITE_API_BASE_URL || import.meta.env.VITE_API_URL || '';
+      const baseUrl = import.meta.env.VITE_API_BASE_URL || import.meta.env.VITE_API_URL || 'http://localhost:5000/api/v1';
       const response = await fetch(`${baseUrl}/payroll/payslip/${run.id}/download`, {
         headers: {
           Authorization: token ? `Bearer ${token}` : ''
